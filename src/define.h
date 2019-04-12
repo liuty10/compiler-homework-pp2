@@ -10,6 +10,7 @@
 
 #define MAX_LINE_SIZE 1000
 #define MAX_TOKEN_SIZE 1000
+#define MAX_TOKEN_IN_ROW 1000
 #define MACRO_TABLE_SIZE 1000
 #define true 1
 #define false 0
@@ -62,3 +63,12 @@
 #define ERR_UnknownSymbol  	3
 #define ERR_InvalidDirective  	4
 #define ERR_Others	  	5
+
+struct token{
+    int row;
+    int left;
+    int right;
+    int category;
+    int err_num;
+    char token[MAX_TOKEN_SIZE+1];
+};
