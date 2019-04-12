@@ -5,4 +5,4 @@ FLAGS=-g
 all: *.c *.h
 	$(CC) $(FLAGS) *.c -o $(RESULT)
 clean:
-	rm $(RESULT)
+	rm $(RESULT) *.out

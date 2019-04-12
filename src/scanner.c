@@ -46,6 +46,10 @@ bool newTokenEnd(char* tokenBuffer, char *ch, int *pleft, int *pright, int len){
 					tokenBuffer[0]=*ch;
 					tokenBuffer[1]='\0';
 					deterministic_category = T_Others;
+                                        if(*ch == '!') deterministic_category = T_Logic_Not;
+                                        if(*ch == '>') deterministic_category = T_Larger;
+                                        if(*ch == '<') deterministic_category = T_Less;
+                                        if(*ch == '=') deterministic_category = T_Assign;
 				}else{
 					tokenBuffer[0]=*ch;
 					tokenBuffer[1]='=';
@@ -61,7 +65,8 @@ bool newTokenEnd(char* tokenBuffer, char *ch, int *pleft, int *pright, int len){
 			}else if(*ch == '.'){
 				tokenBuffer[0]=*ch;
 				tokenBuffer[1]='\0';
-				deterministic_category = T_Others;
+				deterministic_category = T_Point;
+				//deterministic_category = T_Others;
 				possible_category = T_NULL;
 				return true;
 			}else if(*ch == '"'){// continuing until the end of line or next quote. Or, we need T_String
@@ -114,6 +119,110 @@ bool newTokenEnd(char* tokenBuffer, char *ch, int *pleft, int *pright, int len){
 				}else{
 					print_errors(ERR_Others, tokenBuffer,0);
 				}
+			}else if(*ch=='~'){
+					tokenBuffer[0]=*ch;
+					tokenBuffer[1]='\0';
+					deterministic_category = T_Bitwise_Not;
+					possible_category = T_NULL;
+					return true;
+			}else if(*ch=='('){
+					tokenBuffer[0]=*ch;
+					tokenBuffer[1]='\0';
+					deterministic_category = T_LPara;
+					possible_category = T_NULL;
+					return true;
+			}else if(*ch==')'){
+					tokenBuffer[0]=*ch;
+					tokenBuffer[1]='\0';
+					deterministic_category = T_RPara;
+					possible_category = T_NULL;
+					return true;
+			}else if(*ch=='{'){
+					tokenBuffer[0]=*ch;
+					tokenBuffer[1]='\0';
+					deterministic_category = T_LCurvePara;
+					possible_category = T_NULL;
+					return true;
+			}else if(*ch=='}'){
+					tokenBuffer[0]=*ch;
+					tokenBuffer[1]='\0';
+					deterministic_category = T_RCurvePara;
+					possible_category = T_NULL;
+					return true;
+			}else if(*ch=='['){
+					tokenBuffer[0]=*ch;
+					tokenBuffer[1]='\0';
+					deterministic_category = T_LSquarePara;
+					possible_category = T_NULL;
+					return true;
+			}else if(*ch==']'){
+					tokenBuffer[0]=*ch;
+					tokenBuffer[1]='\0';
+					deterministic_category = T_RSquarePara;
+					possible_category = T_NULL;
+					return true;
+			}else if(*ch==','){
+					tokenBuffer[0]=*ch;
+					tokenBuffer[1]='\0';
+					deterministic_category = T_Comma;
+					possible_category = T_NULL;
+					return true;
+			}else if(*ch==';'){
+					tokenBuffer[0]=*ch;
+					tokenBuffer[1]='\0';
+					deterministic_category = T_SemiColon;
+					possible_category = T_NULL;
+					return true;
+			}else if(*ch=='%'){
+					tokenBuffer[0]=*ch;
+					tokenBuffer[1]='\0';
+					deterministic_category = T_Percent;
+					possible_category = T_NULL;
+					return true;
+			}else if(*ch=='*'){
+					tokenBuffer[0]=*ch;
+					tokenBuffer[1]='\0';
+					deterministic_category = T_Mul;
+					possible_category = T_NULL;
+					return true;
+			}else if(*ch=='+'){
+				if((*pright)==len || *(ch+1)!='+'){
+					tokenBuffer[0]=*ch;
+					tokenBuffer[1]='\0';
+					deterministic_category = T_Add;
+					possible_category = T_NULL;
+					return true;
+				}
+				if(*(ch+1) == '+'){
+					tokenBuffer[0]=*ch;
+					tokenBuffer[1]=*ch;
+					tokenBuffer[2]='\0';
+					deterministic_category = T_Increase;
+					possible_category = T_NULL;
+					(*pleft)++;
+					return true;
+				}else{
+					print_errors(ERR_Others, tokenBuffer,0);
+				}
+			}else if(*ch=='-'){
+				if((*pright)==len || *(ch+1)!='-'){
+					tokenBuffer[0]=*ch;
+					tokenBuffer[1]='\0';
+					deterministic_category = T_Sub;
+					possible_category = T_NULL;
+					return true;
+				}
+				if(*(ch+1) == '-'){
+					tokenBuffer[0]=*ch;
+					tokenBuffer[1]=*ch;
+					tokenBuffer[2]='\0';
+					deterministic_category = T_Decrease;
+					possible_category = T_NULL;
+					(*pleft)++;
+					return true;
+				}else{
+					print_errors(ERR_Others, tokenBuffer,0);
+				}
 			}else if(*ch=='/'){
 				if((*pright)<len){
 					if(*(ch+1)=='/'){
@@ -126,7 +235,7 @@ bool newTokenEnd(char* tokenBuffer, char *ch, int *pleft, int *pright, int len){
 					}else{
 						tokenBuffer[0]=*ch;
 						tokenBuffer[1]='\0';
-						deterministic_category = T_Others;
+						deterministic_category = T_Div;
 						possible_category = T_NULL;
 						return true;
 					}
@@ -381,6 +490,20 @@ int check_keyword(char* tokenBuffer){
 	return T_Identifier;	
 }
 
+int check_operator(char* tokenBuffer){
+       if(tokenBuffer[0]=='+')         return T_Add;
+       if(tokenBuffer[0]=='-')         return T_Sub;
+       if(tokenBuffer[0]=='*')         return T_Mul;
+       if(tokenBuffer[0]=='/')         return T_Div;
+       if(tokenBuffer[0]=='%')         return T_Percent;
+       if(tokenBuffer[0]=='<')         return T_Less;
+       if(tokenBuffer[0]=='>')         return T_Larger;
+       if(tokenBuffer[0]=='!')         return T_Logic_Not;
+       if(tokenBuffer[0]=='~')         return T_Bitwise_Not;
+       if(tokenBuffer[0]=='=')         return T_Assign;
+}
+
+
 int getTokens(char *inputLine, int cur_row){
 	char tokenBuffer[MAX_TOKEN_SIZE + 1];
 	int left = 0, right = 0, tokenIndex=0;
@@ -401,6 +524,9 @@ int getTokens(char *inputLine, int cur_row){
 			    if(deterministic_category == T_Identifier){
 				deterministic_category = check_keyword(tokenBuffer);
 			    }
+			    //if(deterministic_category == T_Others){
+			   //	deterministic_category = check_operator(tokenBuffer);
+			    //}
                             tokenInRow[tokenIndex].row   = cur_row;
                             tokenInRow[tokenIndex].left  = left+1;
                             tokenInRow[tokenIndex].right = right+1;

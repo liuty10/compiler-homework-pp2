@@ -84,7 +84,7 @@ int main(int argc, char* argv[]){
                 //scanner for tokens in a row
 		rowTokenNum = getTokens(szLineBuffer, row_index);//tokens for this row in array.
                 for(i=0;i<rowTokenNum;i++){
-                    printf("%s\n", tokenInRow[i].token);
+                    printf("%s\t%d\n", tokenInRow[i].token, tokenInRow[i].category);
                 }
                 
 	}
