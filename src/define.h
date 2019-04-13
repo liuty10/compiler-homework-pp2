@@ -17,14 +17,14 @@
 #define bool int
 
 // Define token types
-#define T_NULL	 	0
-#define T_BoolConstant	1
-#define T_IntConstant 	2
+#define T_NULL           0
+#define T_BoolConstant   1
+#define T_IntConstant    2
 #define T_DoubleConstant 3
 #define T_StringConstant 4
-#define T_Identifier 	 5
+#define T_Identifier     5
 
-#define T_Void		6
+#define T_Void          6
 #define T_Int		7
 #define T_Double	8
 #define T_Bool		9
@@ -82,7 +82,21 @@
 #define ERR_TooLongVariable  	2
 #define ERR_UnknownSymbol  	3
 #define ERR_InvalidDirective  	4
-#define ERR_Others	  	5
+#define ERR_Others              5
+
+//Parsing status
+#define PS_PROGRAM          1
+#define PS_DECLARATION          1
+#define PS_VAR          1
+#define PS_FNC          1
+
+#define PS_          1
+#define PS_FNC          1
+#define PS_FNC          1
+#define PS_FNC          1
+#define PS_FNC          1
+#define PS_FNC          1
+
 
 struct token{
     int row;

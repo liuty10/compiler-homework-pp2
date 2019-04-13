@@ -72,7 +72,7 @@ bool newTokenEnd(char* tokenBuffer, char *ch, int *pleft, int *pright, int len){
 			}else if(*ch == '"'){// continuing until the end of line or next quote. Or, we need T_String
 				possible_category = T_StringConstant;
 				return false;
-			}else if(*ch == ' '){
+			}else if(*ch == ' ' || *ch == '\t'){
 				(*pleft)++;
 				(*pright)++;
 				possible_category = T_NULL;
@@ -490,19 +490,6 @@ int check_keyword(char* tokenBuffer){
 	return T_Identifier;	
 }
 
-int check_operator(char* tokenBuffer){
-       if(tokenBuffer[0]=='+')         return T_Add;
-       if(tokenBuffer[0]=='-')         return T_Sub;
-       if(tokenBuffer[0]=='*')         return T_Mul;
-       if(tokenBuffer[0]=='/')         return T_Div;
-       if(tokenBuffer[0]=='%')         return T_Percent;
-       if(tokenBuffer[0]=='<')         return T_Less;
-       if(tokenBuffer[0]=='>')         return T_Larger;
-       if(tokenBuffer[0]=='!')         return T_Logic_Not;
-       if(tokenBuffer[0]=='~')         return T_Bitwise_Not;
-       if(tokenBuffer[0]=='=')         return T_Assign;
-}
-
 
 int getTokens(char *inputLine, int cur_row){
 	char tokenBuffer[MAX_TOKEN_SIZE + 1];
@@ -524,9 +511,6 @@ int getTokens(char *inputLine, int cur_row){
 			    if(deterministic_category == T_Identifier){
 				deterministic_category = check_keyword(tokenBuffer);
 			    }
-			    //if(deterministic_category == T_Others){
-			   //	deterministic_category = check_operator(tokenBuffer);
-			    //}
                             tokenInRow[tokenIndex].row   = cur_row;
                             tokenInRow[tokenIndex].left  = left+1;
                             tokenInRow[tokenIndex].right = right+1;

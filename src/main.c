@@ -85,6 +85,7 @@ int main(int argc, char* argv[]){
 		rowTokenNum = getTokens(szLineBuffer, row_index);//tokens for this row in array.
                 for(i=0;i<rowTokenNum;i++){
                     printf("%s\t%d\n", tokenInRow[i].token, tokenInRow[i].category);
+                    
                 }
                 
 	}
