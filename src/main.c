@@ -79,7 +79,7 @@ int main(int argc, char* argv[]){
 	row_index = 0;
 	rewind(processed_file);
         Program *prog = (Program*)new Program();
-        (void*) nodePointer = NULL;
+        void* nodePointer = NULL;
 	while(fgets(szLineBuffer, MAX_LINE_SIZE, processed_file)!=NULL){
 		row_index++;
 		if(szLineBuffer[0] == '\n') continue;
@@ -92,6 +92,7 @@ int main(int argc, char* argv[]){
                 }
                 
 	}
+        prog->printAST();
 	fclose(source_file);
 	fclose(processed_file);
     	return 0;

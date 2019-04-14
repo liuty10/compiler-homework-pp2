@@ -206,7 +206,7 @@ class VariableDecl{
        public:
            int type;//int, double, bool, string
            char ident[MAX_TOKEN_SIZE];//1000
-           struct VariableDecl* next; //only for functional formals' use
+           VariableDecl* next; //only for functional formals' use
 };
 
 class FunctionDecl{
@@ -227,7 +227,7 @@ class FunctionDecl{
        public:
            int type;//int, double, bool, string, void
            char ident[MAX_TOKEN_SIZE];//1000
-           struct VariableDecl* formalStart;//a list of varaibles
+           VariableDecl* formalStart;//a list of varaibles
            struct bodyStmt* stmtFirst;
 };
 
@@ -264,7 +264,7 @@ class Decl{
           char ident[MAX_TOKEN_SIZE];//1000
           int category; //1: var, 2: func
           void* declPointer;//VariableDecl, FunctionDecl
-          struct Decl* nextItem;
+          Decl* nextItem;
 };
 
 /* Program is the root node of AST, and it is actually a linked list of declarations.
@@ -286,11 +286,26 @@ class Program{
                declTableStart = NULL;
            }
       }
+      void printAST(){
+           Decl* curDeclP = declTableStart;
+           while(curDeclP != NULL){
+                    if(curDeclP->category == DECL_VAR){
+                         printf("type: %d\n",  curDeclP->declType);
+                         printf("ident: %s\n", curDeclP->ident);
+                    }else if(curDeclP->category == DECL_FUNC){
+                         printf("Can't print func Yet.\n");
+
+                    }else{
+                         printf("Declaration Category Error 0.\n");
+                    }
+               curDeclP = curDeclP->nextItem;
+           }
+      };
       public:
-           struct Decl *declTableStart;
+           Decl *declTableStart;
            int    declTotal;
            int    curStatus;
 };
 
 //function declarations
-void parser(struct token *token, Program *prog);
+void* parser(struct token *token, Program *prog, void* pointer);
