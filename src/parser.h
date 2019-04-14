@@ -192,8 +192,10 @@ struct callFunc{
 
 class VariableDecl{
        public:
-           VariableDecl(){
-               
+           VariableDecl(int declType){
+               type = declType;
+               ident[0]  = '\0';
+               next = NULL;
            };
            VariableDecl(int declType, char*name){
                type = declType;
@@ -211,8 +213,11 @@ class VariableDecl{
 
 class FunctionDecl{
        public:
-           FunctionDecl(){
-      
+           FunctionDecl(int declType){
+               type = declType;
+               ident[0] = '\0';
+               formalStart = NULL;
+               stmtFirst   = NULL;
            };
            FunctionDecl(int declType, char* name){
                type = declType;
@@ -243,20 +248,20 @@ class Decl{
           Decl(int cat, int type){
                category = cat;
                if(category == DECL_VAR){
-                    declPointer = (void*)malloc(sizeof(VariableDecl));
-                    ((struct VariableDecl*)declPointer)->type = type;
+                    declPointer = (void*)new VariableDecl(type);
+                    //((struct VariableDecl*)declPointer)->type = type;
                     declType = type;     
                }else if(category == DECL_FUNC){
-                    declPointer = (void*)malloc(sizeof(FunctionDecl));
-                    ((struct FunctionDecl*)declPointer)->type = type;
+                    declPointer = (void*)new FunctionDecl(type);
+                    //((struct FunctionDecl*)declPointer)->type = type;
                     declType = type;
                }else{
                     declPointer = NULL;
                }
           };
           ~Decl(){
-               if(category == DECL_VAR)  {delete (struct VariableDecl*)declPointer; category=0;}
-               if(category == DECL_FUNC) {delete (struct FunctionDecl*)declPointer; category=0;}
+               if(category == DECL_VAR)  {delete (VariableDecl*)declPointer; category=0;}
+               if(category == DECL_FUNC) {delete (FunctionDecl*)declPointer; category=0;}
                if(nextItem != NULL)      {delete (nextItem); nextItem=NULL;}
           }
       public:
