@@ -86,8 +86,6 @@ int main(int argc, char* argv[]){
                 //scanner for tokens in a row
 		rowTokenNum = getTokens(szLineBuffer, row_index);//tokens for this row in array.
                 for(i=0;i<rowTokenNum;i++){
-                    //printf("%s\t%d\n", tokenInRow[i].token, tokenInRow[i].category);
-                    //parser(tokenInRow, rowTokenNum, prog); 
                     nodePointer = parser(&tokenInRow[i], prog, nodePointer); 
                 }
                 

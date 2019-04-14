@@ -249,11 +249,9 @@ class Decl{
                category = cat;
                if(category == DECL_VAR){
                     declPointer = (void*)new VariableDecl(type);
-                    //((struct VariableDecl*)declPointer)->type = type;
                     declType = type;     
                }else if(category == DECL_FUNC){
                     declPointer = (void*)new FunctionDecl(type);
-                    //((struct FunctionDecl*)declPointer)->type = type;
                     declType = type;
                }else{
                     declPointer = NULL;
@@ -307,7 +305,8 @@ class Program{
            }
       };
       public:
-           Decl *declTableStart;
+           Decl  *declTableStart;
+           Decl  *declTableCurrent;
            int    declTotal;
            int    curStatus;
 };

@@ -91,7 +91,7 @@
 //Parser Status
 #define STATUS_PROGRAM 1
 #define STATUS_DECL    2
-#define STATUS_VAR     3
+#define STATUS_FORMAL  3
 #define STATUS_FUNC    4
 
 
