@@ -18,7 +18,7 @@
 
 */
 
-#include"define.h"
+#include"parser.h"
 
 extern struct token tokenInRow[MAX_TOKEN_IN_ROW];
 extern void pre_processor(FILE* source, FILE* dest);
@@ -78,14 +78,17 @@ int main(int argc, char* argv[]){
         
 	row_index = 0;
 	rewind(processed_file);
+        Program *prog = (Program*)new Program();
+        (void*) nodePointer = NULL;
 	while(fgets(szLineBuffer, MAX_LINE_SIZE, processed_file)!=NULL){
 		row_index++;
 		if(szLineBuffer[0] == '\n') continue;
                 //scanner for tokens in a row
 		rowTokenNum = getTokens(szLineBuffer, row_index);//tokens for this row in array.
                 for(i=0;i<rowTokenNum;i++){
-                    printf("%s\t%d\n", tokenInRow[i].token, tokenInRow[i].category);
-                    
+                    //printf("%s\t%d\n", tokenInRow[i].token, tokenInRow[i].category);
+                    //parser(tokenInRow, rowTokenNum, prog); 
+                    nodePointer = parser(&tokenInRow[i], prog, nodePointer); 
                 }
                 
 	}

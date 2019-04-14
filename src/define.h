@@ -78,25 +78,49 @@
 
 //Define Error types
 #define ERR_NULL		0
-#define ERR_Unterminated	1
+#define ERR_Unterminated        1
 #define ERR_TooLongVariable  	2
 #define ERR_UnknownSymbol  	3
 #define ERR_InvalidDirective  	4
 #define ERR_Others              5
 
-//Parsing status
-#define PS_PROGRAM          1
-#define PS_DECLARATION          1
-#define PS_VAR          1
-#define PS_FNC          1
+//Decl
+#define DECL_VAR       1
+#define DECL_FUNC      2
 
-#define PS_          1
-#define PS_FNC          1
-#define PS_FNC          1
-#define PS_FNC          1
-#define PS_FNC          1
-#define PS_FNC          1
+//Parser Status
+#define STATUS_PROGRAM 1
+#define STATUS_DECL    2
+#define STATUS_VAR     3
+#define STATUS_FUNC    4
 
+
+//Parser: stmt category
+#define STMT_BLOCK     1
+#define STMT_IF        2
+#define STMT_FOR       3
+#define STMT_WHILE     4
+#define STMT_RET       5
+#define STMT_BREAK     6
+#define STMT_PRINT     7
+#define STMT_EXPR      8
+
+#define EXPR_ASSIGN    9
+#define EXPR_CONSTANT  10
+#define EXPR_IDENT     11
+#define EXPR_CALL      12
+#define EXPR_PARA      13//(Expr)
+#define EXPR_ARITHM    14
+#define EXPR_EQUAL     15
+#define EXPR_RELATION  16
+#define EXPR_LOGIC     17
+#define EXPR_READINT   18
+#define EXPR_READLINE  19
+#define EXPR_INTCONST     20
+#define EXPR_DOUBLECONST  21
+#define EXPR_BOOLCONST    22
+#define EXPR_STRINGCONST  23
+#define EXPR_NULLCONST    24
 
 struct token{
     int row;

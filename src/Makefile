@@ -1,4 +1,4 @@
-CC=gcc
+CC=g++
 RESULT=dcc
 FLAGS=-g
 
