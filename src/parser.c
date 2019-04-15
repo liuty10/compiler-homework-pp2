@@ -112,26 +112,28 @@ void* parser(struct token *token, Program *prog, void* pointer){
                                printf("Error occurs in formal parsing, bad token..\n");
                                return false;
                      }
-                     //return (void*)curPointer;
                      break;
                   }
              case STATUS_FUNC:
-                  {
-                     if(token_category == T_LCurvePara){//body starts
-                          if(true){
-                          //if(parserFuncBody(curPointer->declPointer->stmtFirst)==true){
-                              //no errors, func end.
-                              prog->curStatus = STATUS_PROGRAM;
-                              return (void*)pointer;
-                          }else{//error occurs in body parsing process.
-                              printf("Error occurs in body parsing..\n");
+                  {  
+                     if(parse_func_flag == 0){
+                         if(token_category == T_LCurvePara){//body starts
+                              parse_func_flag = 1;
+                              if(true){
+                                  prog->curStatus = STATUS_PROGRAM;
+                                  return (void*)pointer;
+                              }else{//error occurs in body parsing process.
+                                  printf("Error occurs in body parsing..\n");
+                                  return false;
+                              }
+                              
+                         }else{
+                              printf("Error occurs in STATUS_FUNC..missing {\n");
                               return false;
-                          }
-                          
+                         }
                      }else{
-                          printf("Error occurs in STATUS_FUNC..\n");
+
                      }
-                     printf("In STATUS_FUNC..\n");
                      break;
                   }
              default:

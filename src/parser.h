@@ -304,6 +304,7 @@ class Program{
                               printf("Formals:%d\t %s\t", formal->type, formal->ident);
                               formal = formal->formal;
                          }
+                         printf("\n");
                     }else{
                          printf("Declaration Category Error 0.\n");
                     }
