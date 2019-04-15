@@ -5,17 +5,7 @@ extern struct token tokenInRow[MAX_TOKEN_IN_ROW];
  *
 */
 
-
-bool parserFuncFormals(curPointer->declPointer->formalStart){
-
-     return true;
-}
-bool parserFuncBody(curPointer->declPointer->stmtFirst){
-
-     return true;
-}
-
-
+int formal_type_flag = 0;
 
 void* parser(struct token *token, Program *prog, void* pointer){
     int token_category = token->category;
@@ -53,7 +43,7 @@ void* parser(struct token *token, Program *prog, void* pointer){
                   }
              case STATUS_DECL:
                   {
-                     Decl* curPointer=pointer;
+                     Decl* curPointer=(Decl*)pointer;
                      if(token_category == T_Identifier && curPointer->ident[0]=='\0'){
                            strcpy(curPointer->ident,token->token);
                            return (void*)curPointer; 
@@ -61,7 +51,9 @@ void* parser(struct token *token, Program *prog, void* pointer){
                            FunctionDecl* declFunc  = new FunctionDecl(curPointer->declType, curPointer->ident);
                            curPointer->declPointer = (void*)declFunc;
                            prog->curStatus = STATUS_FORMAL;
-                           return (void*)(curPoiner->declPointer);//point to Func 
+                           prog->declTableCurrent->category = DECL_FUNC;
+                           formal_type_flag = 1;
+                           return (void*)(&(declFunc->formal));//point to Func 
                      }else if(token_category == T_SemiColon && curPointer->declType!=T_Void){
                            VariableDecl* declVar = new VariableDecl(curPointer->declType, curPointer->ident);
                            curPointer->declPointer = (void*)declVar;
@@ -76,34 +68,61 @@ void* parser(struct token *token, Program *prog, void* pointer){
                   }
              case STATUS_FORMAL:
                   {
-                     FunctionDecl* curPointer=(FunctionDecl*)pointer;
+                     VariableDecl** curPointer = (VariableDecl**)pointer;
                      if(token_category == T_RPara){//formal end, body stmt start.
-                          printf("Parse Formal End..\n");
-                          prog->curStatus = STATUS_FUNC;
-                     }else{//parsing formal varaibles passed to a function
-                          if(token_category == T_Int || token_category == T_Double
-                             || token_category == T_Bool || token_category == T_String)
-                          {
-                              curPointer->formalStart = new Decl(token_category);//nextItem
-                              prog->curStatus = STATUS_FORMAL_DECL;
-                              return (void*)(curPointer->formalStart);
-                          }
-                          if(parserFuncFormals(curPointer->declPointer->formalStart)==false){
-                              printf("Error occurs in formal parsing..\n");
+                          if(formal_type_flag == 1 || formal_type_flag == 3){
+                              printf("Parse Formal End..\n");
+                              prog->curStatus = STATUS_FUNC;
+                              formal_type_flag = 0;
+                              return (void*)(prog->declTableCurrent);
+                          }else{
+                              printf("Error occurs in formal parsing, expect ident..\n");
                               return false;
                           }
-                          curPointer->category = STATUS_FUNC;
+                     }else if(token_category == T_Int || token_category == T_Double
+                             || token_category == T_Bool || token_category == T_String){
+
+                              if(formal_type_flag == 1){//just start, expect type
+                                  *curPointer = new VariableDecl(token_category);//nextItem
+                                  formal_type_flag = 2;//expect ident next time.
+                                  return (void*)(curPointer);
+                              }else{
+                                  printf("Error occurs in formal parsing, expect ident..\n");
+                                  return false;
+                              }
+                     }else if(token_category == T_Identifier){
+                              if(formal_type_flag == 2){
+                                   strcpy((*curPointer)->ident, token->token);
+                                   formal_type_flag = 3;//expect , or ) next time.
+                                   return (void*)curPointer;
+                              }else{
+                                  printf("Error occurs in formal parsing,expect type,comma,RP..\n");
+                                  return false;
+                              }
+                     }else if(token_category == T_Comma){
+                               if(formal_type_flag == 3){
+                                   //should be good.
+                                   formal_type_flag = 1; //start a new para
+                                   return (void*)(&((*curPointer)->formal));
+                               }else{
+                                  printf("Error occurs in formal parsing,flag is not 2..\n");
+                                  return false;
+                               }
+                     }else{
+                               printf("Error occurs in formal parsing, bad token..\n");
+                               return false;
                      }
-                     return (void*)curPointer;
+                     //return (void*)curPointer;
                      break;
                   }
              case STATUS_FUNC:
                   {
                      if(token_category == T_LCurvePara){//body starts
-                          if(parserFuncBody(curPointer->declPointer->stmtFirst)==true){
+                          if(true){
+                          //if(parserFuncBody(curPointer->declPointer->stmtFirst)==true){
                               //no errors, func end.
                               prog->curStatus = STATUS_PROGRAM;
-                              return (void*)curPointer;
+                              return (void*)pointer;
                           }else{//error occurs in body parsing process.
                               printf("Error occurs in body parsing..\n");
                               return false;

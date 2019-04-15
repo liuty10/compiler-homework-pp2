@@ -195,20 +195,20 @@ class VariableDecl{
            VariableDecl(int declType){
                type = declType;
                ident[0]  = '\0';
-               next = NULL;
+               formal = NULL;
            };
            VariableDecl(int declType, char*name){
                type = declType;
                strcpy(ident, name);
-               next = NULL;
+               formal = NULL;
            };
            ~VariableDecl(){
-               if(next !=NULL){delete next; next = NULL;}
+               if(formal !=NULL){delete formal; formal = NULL;}
            };
        public:
            int type;//int, double, bool, string
            char ident[MAX_TOKEN_SIZE];//1000
-           VariableDecl* next; //only for functional formals' use
+           VariableDecl* formal; //only for functional formals' use
 };
 
 class FunctionDecl{
@@ -216,23 +216,23 @@ class FunctionDecl{
            FunctionDecl(int declType){
                type = declType;
                ident[0] = '\0';
-               formalStart = NULL;
+               formal = NULL;
                stmtFirst   = NULL;
            };
            FunctionDecl(int declType, char* name){
                type = declType;
                strcpy(ident, name);
-               formalStart = NULL;
+               formal = NULL;
                stmtFirst   = NULL;
            };
            ~FunctionDecl(){
-                if(formalStart != NULL) {delete formalStart; formalStart=NULL;}
+                if(formal != NULL) {delete formal; formal=NULL;}
                 if(stmtFirst   != NULL) {delete stmtFirst; stmtFirst=NULL;}
            };
        public:
            int type;//int, double, bool, string, void
            char ident[MAX_TOKEN_SIZE];//1000
-           VariableDecl* formalStart;//a list of varaibles
+           VariableDecl* formal;//a list of varaibles
            struct bodyStmt* stmtFirst;
 };
 
@@ -296,8 +296,14 @@ class Program{
                          printf("type: %d\n",  curDeclP->declType);
                          printf("ident: %s\n", curDeclP->ident);
                     }else if(curDeclP->category == DECL_FUNC){
-                         printf("Can't print func Yet.\n");
-
+                         FunctionDecl* function = (FunctionDecl*)(curDeclP->declPointer);
+                         printf("functype: %d\n", function->type);
+                         printf("    ident: %s\n", function->ident);
+                         VariableDecl *formal = function->formal;
+                         while(formal != NULL){
+                              printf("Formals:%d\t %s\t", formal->type, formal->ident);
+                              formal = formal->formal;
+                         }
                     }else{
                          printf("Declaration Category Error 0.\n");
                     }
