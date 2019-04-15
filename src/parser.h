@@ -129,6 +129,8 @@ struct nullExpr{
 */
 
 // STMT_BLOCK
+// we need a linked list to save each stmt infor
+
 struct bodyStmt{
        int category;
        void* stmtPointer;//varDecl,if,while,for,break,return,print,expr,
@@ -217,23 +219,24 @@ class FunctionDecl{
                type = declType;
                ident[0] = '\0';
                formal = NULL;
-               stmtFirst   = NULL;
+               stmtFirstInfor   = NULL;
            };
            FunctionDecl(int declType, char* name){
                type = declType;
                strcpy(ident, name);
                formal = NULL;
-               stmtFirst   = NULL;
+               stmtFirstInfor   = NULL;
            };
            ~FunctionDecl(){
                 if(formal != NULL) {delete formal; formal=NULL;}
-                if(stmtFirst   != NULL) {delete stmtFirst; stmtFirst=NULL;}
+                if(stmtFirstInfor   != NULL) {delete stmtFirstInfor; stmtFirstInfor=NULL;}
            };
        public:
            int type;//int, double, bool, string, void
            char ident[MAX_TOKEN_SIZE];//1000
            VariableDecl* formal;//a list of varaibles
-           struct bodyStmt* stmtFirst;
+           struct bodyStmt* stmtFirstInfor;
+           struct bodyStmt* stmtCurrentInfor;
 };
 
 class Decl{
@@ -303,6 +306,13 @@ class Program{
                          while(formal != NULL){
                               printf("Formals:%d\t %s\t", formal->type, formal->ident);
                               formal = formal->formal;
+                         }
+                         struct bodyStmt *stmtInfor = function->stmtFirstInfor;
+                         while(stmtInfor != NULL){
+                              if(stmtInfor->category == STMT_VAR){
+                                  printf("Func body:%d\t %s\t", ((VariableDecl*)(stmtInfor->stmtPointer))->type, ((VariableDecl*)(stmtInfor->stmtPointer))->ident);
+                              }
+                              stmtInfor = stmtInfor->next;
                          }
                          printf("\n");
                     }else{

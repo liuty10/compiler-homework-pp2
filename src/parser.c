@@ -8,6 +8,8 @@ extern struct token tokenInRow[MAX_TOKEN_IN_ROW];
 int formal_type_flag = 0;
 int left_curve_para = 0;
 int parse_func_flag = 0;
+int parse_level = 0;
+int parse_func_status = -1;
 
 void* parser(struct token *token, Program *prog, void* pointer){
     int token_category = token->category;
@@ -82,7 +84,7 @@ void* parser(struct token *token, Program *prog, void* pointer){
                               return false;
                           }
                      }else if(token_category == T_Int || token_category == T_Double
-                             || token_category == T_Bool || token_category == T_String){
+                              || token_category == T_Bool || token_category == T_String){
 
                               if(formal_type_flag == 1){//just start, expect type
                                   *curPointer = new VariableDecl(token_category);//nextItem
@@ -121,6 +123,7 @@ void* parser(struct token *token, Program *prog, void* pointer){
                          if(token_category == T_LCurvePara){//body starts
                               parse_func_flag = 1;
                               left_curve_para = 1;
+                              parse_level+=1;
                               prog->curStatus = STATUS_FUNCBODY;
                               return (void*)pointer;//prog->declTableCurrent
                          }else{
@@ -136,6 +139,7 @@ void* parser(struct token *token, Program *prog, void* pointer){
                                 left_curve_para = 0;
                                 parse_func_flag = 0;
                                 prog->curStatus = STATUS_PROGRAM;
+                                parse_func_status = -1;
                                 return (void*)(prog->declTableCurrent);
                            }else{
                                 left_curve_para -=1;
@@ -143,6 +147,80 @@ void* parser(struct token *token, Program *prog, void* pointer){
                                 return pointer;//do nothing 
                            }
                        }else{
+                           //we should do something for function body
+                           //variable declaration first;
+                           if(parse_func_status == -1){
+                               struct bodyStmt *stmtInforTable = (struct bodyStmt*)malloc(sizeof(struct bodyStmt));
+                               ((FunctionDecl*)(((Decl*)pointer)->declPointer))->stmtFirstInfor = stmtInforTable;
+                               ((FunctionDecl*)(((Decl*)pointer)->declPointer))->stmtCurrentInfor = stmtInforTable;
+                               if(token_category == T_Int || token_category == T_Double
+                                 || token_category == T_Bool || token_category == T_String)
+                               {
+                                stmtInforTable->category = STMT_VAR;
+                                stmtInforTable->stmtPointer = (void*)(new VariableDecl(token_category));
+                                parse_func_status = 1;//var decl, after type
+                                return (void*)(stmtInforTable);
+                               }else if(token_category == T_Identifier){
+                                 ;    
+                               }else if(token_category == T_SemiColon){
+                                 ;
+                               }else if(token_category == T_Assign){
+                                 ;
+                               }else if(token_category == T_ReadInteger){
+                                 ;
+                               }else if(token_category == T_ReadLine){
+                                 ;
+                               }else{
+                                    ;
+                               }
+
+                           }else if(parse_func_status == 0){
+                               struct bodyStmt *stmtInforTable = (struct bodyStmt*)malloc(sizeof(struct bodyStmt));
+                               ((FunctionDecl*)(((Decl*)pointer)->declPointer))->stmtCurrentInfor->next = stmtInforTable;
+                               ((FunctionDecl*)(((Decl*)pointer)->declPointer))->stmtCurrentInfor = ((FunctionDecl*)(((Decl*)pointer)->declPointer))->stmtCurrentInfor->next;
+                               if(token_category == T_Int || token_category == T_Double
+                                 || token_category == T_Bool || token_category == T_String)
+                               {
+                                stmtInforTable->category = STMT_VAR;
+                                stmtInforTable->stmtPointer = (void*)(new VariableDecl(token_category));
+                                parse_func_status = 1;//var decl, after type
+                                return (void*)(stmtInforTable);
+                               }else if(token_category == T_Identifier){
+                                 ;    
+                               }else if(token_category == T_SemiColon){
+                                 ;
+                               }else if(token_category == T_Assign){
+                                 ;
+                               }else if(token_category == T_ReadInteger){
+                                 ;
+                               }else if(token_category == T_ReadLine){
+                                 ;
+                               }else{
+                                    ;
+                               }
+                           }else if(parse_func_status == 1){
+                               struct bodyStmt* curPointer = (struct bodyStmt*)pointer;
+                               if(token_category == T_Identifier){
+                               strcpy(((VariableDecl*)(curPointer->stmtPointer))->ident,token->token);
+                               parse_func_status = 2;
+                               return (void*)(curPointer);
+                               }else{
+                                    printf("Error occurs, expect an identifier..\n");
+                                    return false;
+                               }
+                           }else if(parse_func_status == 2){
+                               if(token_category == T_SemiColon){
+                                    parse_func_status = 0;
+                                    return (void*)(prog->declTableCurrent);
+                               }else{
+                                    printf("Error occurs, expect a semiColon..\n");
+                                    return false;
+                               }
+                           }else{
+                               ;
+                           }
+                           //then, assignment, simple and complex
+                           //then, function call with or without return value
                            printf("function body do nothing currently.\n");
                            return pointer;//do nothing currently.
                        }

@@ -97,6 +97,7 @@
 
 
 //Parser: stmt category
+#define STMT_VAR     0
 #define STMT_BLOCK     1
 #define STMT_IF        2
 #define STMT_FOR       3
