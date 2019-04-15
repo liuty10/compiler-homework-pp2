@@ -89,10 +89,11 @@
 #define DECL_FUNC      2
 
 //Parser Status
-#define STATUS_PROGRAM 1
-#define STATUS_DECL    2
-#define STATUS_FORMAL  3
-#define STATUS_FUNC    4
+#define STATUS_PROGRAM      1
+#define STATUS_DECL         2
+#define STATUS_FORMAL       3
+#define STATUS_FUNCSTART    4
+#define STATUS_FUNCBODY     5
 
 
 //Parser: stmt category

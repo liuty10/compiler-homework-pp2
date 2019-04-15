@@ -6,6 +6,8 @@ extern struct token tokenInRow[MAX_TOKEN_IN_ROW];
 */
 
 int formal_type_flag = 0;
+int left_curve_para = 0;
+int parse_func_flag = 0;
 
 void* parser(struct token *token, Program *prog, void* pointer){
     int token_category = token->category;
@@ -72,7 +74,7 @@ void* parser(struct token *token, Program *prog, void* pointer){
                      if(token_category == T_RPara){//formal end, body stmt start.
                           if(formal_type_flag == 1 || formal_type_flag == 3){
                               printf("Parse Formal End..\n");
-                              prog->curStatus = STATUS_FUNC;
+                              prog->curStatus = STATUS_FUNCSTART;
                               formal_type_flag = 0;
                               return (void*)(prog->declTableCurrent);
                           }else{
@@ -114,27 +116,37 @@ void* parser(struct token *token, Program *prog, void* pointer){
                      }
                      break;
                   }
-             case STATUS_FUNC:
+             case STATUS_FUNCSTART:
                   {  
-                     if(parse_func_flag == 0){
                          if(token_category == T_LCurvePara){//body starts
                               parse_func_flag = 1;
-                              if(true){
-                                  prog->curStatus = STATUS_PROGRAM;
-                                  return (void*)pointer;
-                              }else{//error occurs in body parsing process.
-                                  printf("Error occurs in body parsing..\n");
-                                  return false;
-                              }
-                              
+                              left_curve_para = 1;
+                              prog->curStatus = STATUS_FUNCBODY;
+                              return (void*)pointer;//prog->declTableCurrent
                          }else{
                               printf("Error occurs in STATUS_FUNC..missing {\n");
                               return false;
                          }
-                     }else{
+                         break;
+                  }
+             case STATUS_FUNCBODY:
+                  {
+                       if(token_category == T_RCurvePara){
+                           if(left_curve_para == 1){
+                                left_curve_para = 0;
+                                parse_func_flag = 0;
+                                prog->curStatus = STATUS_PROGRAM;
+                                return (void*)(prog->declTableCurrent);
+                           }else{
+                                left_curve_para -=1;
+                                printf("function body do nothing currently.\n");
+                                return pointer;//do nothing 
+                           }
+                       }else{
+                           printf("function body do nothing currently.\n");
+                           return pointer;//do nothing currently.
+                       }
 
-                     }
-                     break;
                   }
              default:
                        break;
