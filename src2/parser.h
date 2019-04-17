@@ -17,6 +17,27 @@ char szLineBuffer[MAX_LINE_SIZE + 1];//input buffer for fgets
 int rowTokenNum;
 int row_index;
 
+
+//STMT_EXPR
+class Expr{
+       public:
+             Expr(){
+
+             };
+             ~Expr(){};
+             void parseExpr();
+       public:
+             Expr*  left;
+             int    leftCategory;
+             char   op[2];//two bye to save operators
+             Expr*  right;
+             int    rightCategory;
+             Expr*  next;  // The last two rows are for call(actuals) only,
+             int    nextCategory;// since actuals can be a list of Exprs.
+};
+void Expr::parseExpr(){
+
+};
 // STMT_BLOCK
 // we need a linked list to save each stmt infor
 
@@ -117,12 +138,40 @@ bodyStmt* FunctionDecl::parseStmtBlock(FILE* input_file){
                               printf("Declaration in stmt wrong, expect identifier\n");
                               return false;
                          }
-                }else if(tokenInRow[0].category==T_Identifier){
+                }else if(tokenInRow[0].category==T_Identifier     ||
+                         tokenInRow[0].category==T_Logic_Not      ||
+                         tokenInRow[0].category==T_Bitwise_Not    ||
+                         tokenInRow[0].category==T_Sub            ||
+                         tokenInRow[0].category==T_LPara          ||
+                         tokenInRow[0].category==T_NULL           ||
+                         tokenInRow[0].category==T_BoolConstant   ||
+                         tokenInRow[0].category==T_IntConstant    ||
+                         tokenInRow[0].category==T_DoubleConstant ||
+                         tokenInRow[0].category==T_StringConstant ||
+                         tokenInRow[0].category==T_ReadInteger    ||
+                         tokenInRow[0].category==T_ReadLine       ){
+                         /*if(tokenInRow[1].category==T_Assign){//assignment
+                             new assignment();
+                             assignment->right=parseExpression();
+                         }else if(tokenInRow[1].category==T_LPara){//func call
+                             new call();
+                             call->actuals=parseActuals();
+                         }else if(tokenInRow[1].category==T_SemiColon){//ident
 
+                         }*/
+                         Expr*        expr = new Expr();
+                         bodyStmt* exprTmp = new bodyStmt(STMT_EXPR,(void*)expr);
+                         expr->parseExpr();
+                         if(retPointer == NULL){
+                              retPointer = exprTmp;
+                              stmtFirstInfor = exprTmp;
+                              stmtCurrentInfor = exprTmp;
+                         }else{
+                              stmtCurrentInfor->next = exprTmp;
+                              stmtCurrentInfor=stmtCurrentInfor->next;
+                         }
                 }else if(tokenInRow[0].category==T_If){
- 
                 }else if(tokenInRow[0].category==T_While){
-
                 }else if(tokenInRow[0].category==T_For){
                 }else if(tokenInRow[0].category==T_Return){
                 }else if(tokenInRow[0].category==T_Break){

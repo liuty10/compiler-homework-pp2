@@ -95,7 +95,6 @@
 #define STATUS_FUNCSTART    4
 #define STATUS_FUNCBODY     5
 
-
 //Parser: stmt category
 #define STMT_VAR     0
 #define STMT_BLOCK     1
