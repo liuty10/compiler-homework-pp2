@@ -156,12 +156,15 @@ void* parser(struct token *token, Program *prog, void* pointer){
                                if(token_category == T_Int || token_category == T_Double
                                  || token_category == T_Bool || token_category == T_String)
                                {
-                                stmtInforTable->category = STMT_VAR;
-                                stmtInforTable->stmtPointer = (void*)(new VariableDecl(token_category));
-                                parse_func_status = 1;//var decl, after type
-                                return (void*)(stmtInforTable);
+                                   stmtInforTable->category = STMT_VAR;
+                                   stmtInforTable->stmtPointer = (void*)(new VariableDecl(token_category));
+                                   parse_func_status = 1;//var decl, after type
+                                   return (void*)(stmtInforTable);
                                }else if(token_category == T_Identifier){
-                                 ;    
+                                   stmtInforTable->category = STMT_EXPR;
+                                   stmtInforTable->stmtPointer = (struct Expr*)malloc(sizeof(struct Expr));
+                                   parse_func_status = 1;//var decl, after type
+                                   return (void*)(stmtInforTable);
                                }else if(token_category == T_SemiColon){
                                  ;
                                }else if(token_category == T_Assign){
@@ -170,6 +173,8 @@ void* parser(struct token *token, Program *prog, void* pointer){
                                  ;
                                }else if(token_category == T_ReadLine){
                                  ;
+                               }else if(token_category == T_Print){
+                                 ;    
                                }else{
                                     ;
                                }
