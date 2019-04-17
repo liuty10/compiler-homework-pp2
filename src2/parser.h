@@ -95,9 +95,9 @@ class FunctionDecl{
                 if(formal != NULL) {delete formal; formal=NULL;}
                 if(stmtFirstInfor   != NULL) {delete stmtFirstInfor; stmtFirstInfor=NULL;}
            };
-       VariableDecl* parseFormals(FILE* input_file);
+       VariableDecl* parseFormals(FILE* input_file, int index);
        bodyStmt* parseStmtBlock(FILE* input);
-       bodyStmt* parseStmtBlock(FILE* input, int index);
+       //bodyStmt* parseStmtBlock(FILE* input, int index);
        public:
            int type;//int, double, bool, string, void
            char ident[MAX_TOKEN_SIZE];//1000
@@ -106,8 +106,54 @@ class FunctionDecl{
            bodyStmt* stmtCurrentInfor;
 };
 
-VariableDecl* FunctionDecl::parseFormals(FILE* input_file){
-
+VariableDecl* FunctionDecl::parseFormals(FILE* input_file,int i){
+    int formal_type_start = 0;
+    VariableDecl* formalList=NULL;
+    VariableDecl* currentFormal=NULL;
+    for(;i<rowTokenNum;i++){
+        if(formal_type_start ==0){
+            if((tokenInRow[i].category==T_Int || tokenInRow[i].category==T_Double ||
+                tokenInRow[i].category==T_Bool|| tokenInRow[i].category==T_String)&&formal_type_start ==0){
+                formal_type_start = 1;
+            }else{
+                printf("parse formal error, expect type\n");
+                exit(0);
+            }
+        }else if(formal_type_start == 1){
+            if(tokenInRow[i].category==T_Identifier){
+                formal_type_start = 2;
+                VariableDecl* declVar = new VariableDecl(tokenInRow[i-1].category, tokenInRow[i].token);
+                if(formalList == NULL){
+                     formalList = declVar;
+                     currentFormal = declVar;
+                }else{
+                     currentFormal->formal = declVar;
+                     currentFormal = currentFormal->formal;
+                }
+            }else{
+                printf("parse formal error, expect ident\n");
+                exit(0);
+            }
+        }else if(formal_type_start == 2){
+            if(tokenInRow[i].category==T_Comma){
+                formal_type_start = 0;
+            }else if(tokenInRow[i].category == T_RPara){
+                formal_type_start = 3;
+            }else{
+                printf("parse formal error, expect , or ) \n");
+                exit(0);
+            }
+        }else if(formal_type_start == 3){
+            if(tokenInRow[i].category==T_LCurvePara){
+                formal_type_start = 0;
+                return formalList;
+            }else{
+                printf("parse formal error, expect { .\n");
+                exit(0);
+            }
+        }
+    }
+    return NULL;
 };
 
 bodyStmt* FunctionDecl::parseStmtBlock(FILE* input_file){
@@ -177,6 +223,7 @@ bodyStmt* FunctionDecl::parseStmtBlock(FILE* input_file){
                 }else if(tokenInRow[0].category==T_Break){
                 }else if(tokenInRow[0].category==T_Print){
                 }else if(tokenInRow[0].category==T_LCurvePara){//StmtBlock
+                }else if(tokenInRow[0].category==T_RCurvePara){//StmtBlockEnd
                 }else if(tokenInRow[0].category==T_Identifier){//Expr
 
                 }
@@ -184,9 +231,9 @@ bodyStmt* FunctionDecl::parseStmtBlock(FILE* input_file){
         return retPointer;
 }
 
-bodyStmt* FunctionDecl::parseStmtBlock(FILE* input, int index){
+//bodyStmt* FunctionDecl::parseStmtBlock(FILE* input, int index){
 
-}
+//}
 
 class Decl{
       public:
@@ -303,10 +350,15 @@ bool Program::parseProgram(FILE* input_file){
                                       declTableCurrent->nextItem = declTmp;
                                       declTableCurrent = declTableCurrent->nextItem;
                                  }
-                                 if(tokenInRow[3].category == T_RPara && tokenInRow[4].category == T_LCurvePara){//no formal
-                                       declFunc->stmtFirstInfor = declFunc->parseStmtBlock(input_file);//the 4rd ele was not deal with.
+                                 if(tokenInRow[3].category == T_RPara ){
+                                       if(tokenInRow[4].category == T_LCurvePara){//no formal
+                                            declFunc->stmtFirstInfor = declFunc->parseStmtBlock(input_file);//the 4rd ele was not deal with.
+                                       }else{
+                                            printf("Declaration Error. expect {\n");
+                                            return false;
+                                       }
                                  }else{
-                                      declFunc->formal = declFunc->parseFormals(input_file);//start from the index 3.
+                                      declFunc->formal = declFunc->parseFormals(input_file, 3);//start from the index 3.
                                       declFunc->stmtFirstInfor = declFunc->parseStmtBlock(input_file);
                                  }
                              }else{
@@ -333,21 +385,20 @@ void Program::printAST(){
            Decl* curDeclP = declTableStart;
            while(curDeclP != NULL){
                     if(curDeclP->category == DECL_VAR){
-                         printf("type: %d\n",  curDeclP->declType);
-                         printf("ident: %s\n", curDeclP->ident);
+                         printf("type: %d\tident:%s\n",  curDeclP->declType, curDeclP->ident);
                     }else if(curDeclP->category == DECL_FUNC){
                          FunctionDecl* function = (FunctionDecl*)(curDeclP->declPointer);
-                         printf("functype: %d\n", function->type);
-                         printf("    ident: %s\n", function->ident);
+                         printf("functype: %d\tname:%s\n", function->type, function->ident);
                          VariableDecl *formal = function->formal;
                          while(formal != NULL){
-                              printf("Formals:%d\t %s\t", formal->type, formal->ident);
+                              printf("\tFormals:%d\t %s\t", formal->type, formal->ident);
                               formal = formal->formal;
                          }
+                         printf("\n");
                          bodyStmt *stmtInfor = function->stmtFirstInfor;
                          while(stmtInfor != NULL){
                               if(stmtInfor->category == STMT_VAR){
-                                  printf("Func body:%d\t %s\t", ((VariableDecl*)(stmtInfor->stmtPointer))->type, ((VariableDecl*)(stmtInfor->stmtPointer))->ident);
+                                  printf("\tFunc body:%d\t %s\t", ((VariableDecl*)(stmtInfor->stmtPointer))->type, ((VariableDecl*)(stmtInfor->stmtPointer))->ident);
                               }
                               stmtInfor = stmtInfor->next;
                          }
