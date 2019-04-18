@@ -1,7 +1,7 @@
 int a;
 int b;
 int c;
-double main(){
+double main(bool x, bool y, bool z){
     double e;
     double f;
     double g;

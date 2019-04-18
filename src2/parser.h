@@ -36,13 +36,56 @@ class Expr{
              int    nextCategory;// since actuals can be a list of Exprs.
 };
 void Expr::parseExpr(){
+                         /*if(tokenInRow[1].category==T_Assign){//assignment
+                             new assignment();
+                             assignment->right=parseExpression();
+                         }else if(tokenInRow[1].category==T_LPara){//func call
+                             new call();
+                             call->actuals=parseActuals();
+                         }else if(tokenInRow[1].category==T_SemiColon){//ident
+
+                         }*/
 
 };
+
+// STMT_RET
+class retStmt{
+      public:
+            retStmt(Expr* ret, int categ){
+                 category = categ;
+                 retExpr  = ret;
+            };
+            ~retStmt(){
+
+            };
+      public:
+            int category;
+            Expr* retExpr;
+};
+
+// STMT_BREAK
+struct breakStmt{
+      struct Expr* beak; 
+};
+
+// STMT_PRINT
+class printStmt{
+       public:
+            printStmt(){
+            };
+            void parseActuals();
+       public:
+            Expr* actualList;
+};
+
 // STMT_BLOCK
 // we need a linked list to save each stmt infor
-
 class bodyStmt{
        public:
+            bodyStmt(){
+                   category = 0;
+                   stmtPointer = NULL;
+            };
             bodyStmt(int categ, void* pointer){
                    category = categ;
                    stmtPointer = pointer;
@@ -54,6 +97,68 @@ class bodyStmt{
        int category;
        void* stmtPointer;//varDecl,if,while,for,break,return,print,expr,
        bodyStmt* next;
+};
+
+// STMT_IF
+class ifStmt{
+       public:
+             ifStmt(Expr* condition, int categ, bodyStmt* ifstart, bodyStmt* elsestmt){
+                  cond     = condition;
+                  category = categ;
+                  ifstmt   = ifstart;
+                  elsestmt = elsestmt;
+             };
+             ~ifStmt(){
+
+             }
+       public:
+             int category;
+             Expr* cond;
+             bodyStmt* ifstmt;
+             bodyStmt* elsestmt;
+};
+
+// STMT_WHILE
+class whileStmt{
+       public:
+             whileStmt(Expr* condition, int categ, bodyStmt* whilestmt){
+                  cond         = condition;
+                  condCategory = categ;
+                  stmt         = whilestmt;
+             };
+             ~whileStmt(){
+
+             };
+       public:
+       int condCategory;
+       Expr* cond;
+       bodyStmt* stmt;
+};
+
+// STMT_FOR
+class forStmt{
+      public:
+            forStmt(Expr* initExpr, Expr* condExpr, Expr* updateExpr,
+                    int initCateg, int condCateg, int updateCateg, bodyStmt* forstmt){
+
+                            init = initExpr;
+                            cond = condExpr;
+                          update = updateExpr;
+                  initCategory   = initCateg;
+                  condCategory   = condCateg;
+                  updateCategory = updateCateg;
+            };
+            ~forStmt(){
+
+            }
+      public:
+            int initCategory;
+            int condCategory;
+            int updateCategory;
+            Expr* init;
+            Expr* cond;
+            Expr* update;
+            bodyStmt* stmt;
 };
 
 class VariableDecl{
@@ -196,15 +301,6 @@ bodyStmt* FunctionDecl::parseStmtBlock(FILE* input_file){
                          tokenInRow[0].category==T_StringConstant ||
                          tokenInRow[0].category==T_ReadInteger    ||
                          tokenInRow[0].category==T_ReadLine       ){
-                         /*if(tokenInRow[1].category==T_Assign){//assignment
-                             new assignment();
-                             assignment->right=parseExpression();
-                         }else if(tokenInRow[1].category==T_LPara){//func call
-                             new call();
-                             call->actuals=parseActuals();
-                         }else if(tokenInRow[1].category==T_SemiColon){//ident
-
-                         }*/
                          Expr*        expr = new Expr();
                          bodyStmt* exprTmp = new bodyStmt(STMT_EXPR,(void*)expr);
                          expr->parseExpr();
@@ -217,19 +313,112 @@ bodyStmt* FunctionDecl::parseStmtBlock(FILE* input_file){
                               stmtCurrentInfor=stmtCurrentInfor->next;
                          }
                 }else if(tokenInRow[0].category==T_If){
+                      Expr*          cond = new Expr();
+                      bodyStmt*   ifStart = new bodyStmt();
+                      bodyStmt* elseStart = new bodyStmt();
+                      ifStmt*      ifstmt = new ifStmt(cond, cond->parseExpr(),ifStart, elseStart);
+                      bodyStmt*    IfTmp  = new bodyStmt(STMT_IF,(void*)ifstmt);
+                      ifStart->parseStmtBlock();
+                      elseStart->parseStmtBlock();
+
+                      if(retPointer == NULL){
+                           retPointer = IfTmp;
+                           stmtFirstInfor = IfTmp;
+                           stmtCurrentInfor = IfTmp;
+                      }else{
+                           stmtCurrentInfor->next = IfTmp;
+                           stmtCurrentInfor=stmtCurrentInfor->next;
+                      }
                 }else if(tokenInRow[0].category==T_While){
+                      Expr*            cond = new Expr();
+                      bodyStmt*  whileStart = new bodyStmt();
+                      whileStmt*  whilestmt = new whileStmt(cond, cond->parseExpr(), whileStart);
+                      bodyStmt*    WhileTmp = new bodyStmt(STMT_WHILE,(void*)whilestmt);
+                      whileStart->parseStmtBlock();
+
+                      if(retPointer == NULL){
+                           retPointer = WhileTmp;
+                           stmtFirstInfor = WhileTmp;
+                           stmtCurrentInfor = WhileTmp;
+                      }else{
+                           stmtCurrentInfor->next = WhileTmp;
+                           stmtCurrentInfor = stmtCurrentInfor->next;
+                      }
                 }else if(tokenInRow[0].category==T_For){
+                      Expr*          init = new Expr();
+                      Expr*          cond = new Expr();
+                      Expr*        update = new Expr();
+                      bodyStmt*  forStart = new bodyStmt();
+                      forStmt*    forstmt = new forStmt(init, cond, update,
+                                                        init->parseExpr(), cond->parseExpr(),
+                                                        update->parseExpr,forStart);
+
+                      bodyStmt*    ForTmp = new bodyStmt(STMT_FOR,(void*)forstmt);
+                      forStart->parseStmtBlock();
+                      if(retPointer == NULL){
+                           retPointer = ForTmp;
+                           stmtFirstInfor = ForTmp;
+                           stmtCurrentInfor = ForTmp;
+                      }else{
+                           stmtCurrentInfor->next = ForTmp;
+                           stmtCurrentInfor = stmtCurrentInfor->next;
+                      }
                 }else if(tokenInRow[0].category==T_Return){
+                      Expr*     retexpr = new Expr();
+                      retStmt*  retstmt = new retStmt(retexpr, retexpr->parseExpr());
+                      bodyStmt*  RetTmp = new bodyStmt(STMT_RET,(void*)retstmt);
+
+                      if(retPointer == NULL){
+                           retPointer = RetTmp;
+                           stmtFirstInfor = RetTmp;
+                           stmtCurrentInfor = RetTmp;
+                      }else{
+                           stmtCurrentInfor->next = RetTmp;
+                           stmtCurrentInfor = stmtCurrentInfor->next;
+                      }
                 }else if(tokenInRow[0].category==T_Break){
+                     if(tokenInRow[1].category==T_SemiColon){
+                         bodyStmt*  BreakTmp = new bodyStmt(STMT_BREAK, (void*)NULL);
+                         if(retPointer == NULL){
+                              retPointer = BreakTmp;
+                              stmtFirstInfor = BreakTmp;
+                              stmtCurrentInfor = BreakTmp;
+                         }else{
+                              stmtCurrentInfor->next = BreakTmp;
+                              stmtCurrentInfor = stmtCurrentInfor->next;
+                         }
+                         
+                     }else{
+                         printf("Parsing Error, expect a ; \n");
+                         exit(0);
+                     }
                 }else if(tokenInRow[0].category==T_Print){
+                      if(tokenInRow[1].category==T_LPara){
+                          retStmt*   printstmt = new printStmt();
+                          bodyStmt*   PrintTmp = new bodyStmt(STMT_PRINT,(void*)printstmt);
+                          printstmt->parseActuals();
+
+                          if(retPointer == NULL){
+                               retPointer = PrintTmp;
+                               stmtFirstInfor = PrintTmp;
+                               stmtCurrentInfor = PrintTmp;
+                          }else{
+                               stmtCurrentInfor->next = PrintTmp;
+                               stmtCurrentInfor = stmtCurrentInfor->next;
+                          }
+                      }else{
+                           printf("Parsing Error, expect a ( \n");
+                           exit(0);
+                      }
                 }else if(tokenInRow[0].category==T_LCurvePara){//StmtBlock
                 }else if(tokenInRow[0].category==T_RCurvePara){//StmtBlockEnd
-                }else if(tokenInRow[0].category==T_Identifier){//Expr
-
+                }else {//Expr
+                      printf("Unexpected case, token category: %d\n", tokenInRow[0].category);
+                      exit(0);
                 }
         }
         return retPointer;
-}
+};
 
 //bodyStmt* FunctionDecl::parseStmtBlock(FILE* input, int index){
 
