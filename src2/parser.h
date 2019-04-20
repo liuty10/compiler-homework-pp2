@@ -16,7 +16,23 @@ bool parser(FILE* input, FILE* output);
 char szLineBuffer[MAX_LINE_SIZE + 1];//input buffer for fgets
 int rowTokenNum;
 int row_index;
+//EXPR_CONSTANT
+//EXPR_IDENT
+class constIdentOperatorNode{
+       public:
+           constIdentOperatorNode(int categ, char* content){
+                category = categ;
+                strcpy(ident, content);
+           };
+           ~constIdentOperatorNode(){
 
+           };
+       public:
+           int  category;
+           char ident[MAX_TOKEN_SIZE];
+           constIdentOperatorNode* left;
+           constIdentOperatorNode* right;
+};
 //STMT_EXPR
 class Expr{
        public:
@@ -27,26 +43,49 @@ class Expr{
              int parseExpr(int startPos);
        public:
              int    selfcategory;
-             Expr*  left;
-             int    leftCategory;
-             char   op[2];//two bye to save operators
-             Expr*  right;
-             int    rightCategory;
-             Expr*  next;  // The last two rows are for call(actuals) only,
+             constIdentOperatorNode* exprHeadNode;
              int    nextCategory;// since actuals can be a list of Exprs.
+             void*  next;  // The last two rows are for call(actuals) only,
 };
+
 //TODO:
 int Expr::parseExpr(int startPos){
     //return type of Expr
-    /*if(tokenInRow[1].category==T_Assign){//assignment
-        new assignment();
-        assignment->right=parseExpression();
-    }else if(tokenInRow[1].category==T_LPara){//func call
-        new call();
-        call->actuals=parseActuals();
-    }else if(tokenInRow[1].category==T_SemiColon){//ident
+    int category = -1;
+    int pos= -1;
+    if( tokenInRow[startPos].category == T_SemiColon ||
+        tokenInRow[startPos].category == T_Comma     ||
+        tokenInRow[startPos].category == T_RPara     ){
+             return category;
+    }else if(tokenInRow[startPos].category == T_NULL           ||
+             tokenInRow[startPos].category == T_BoolConstant   ||
+             tokenInRow[startPos].category == T_IntConstant    ||
+             tokenInRow[startPos].category == T_DoubleConstant ||
+             tokenInRow[startPos].category == T_StringConstant ||
+             tokenInRow[startPos].category == T_Identifier     ){ //T_CONSTANT
 
-    }*/
+             if(startPos + 1 < rowTokenNum){
+                  if(tokenInRow[startPos+1].category == T_SemiColon ||
+                     tokenInRow[startPos+1].category == T_Comma     ||
+                     tokenInRow[startPos+1].category == T_RPara     ){
+
+                  exprHeadNode = (void*)new constIdentOperatorNode(tokenInRow[startPos].category,
+                                                                   tokenInRow[startPos].token);
+                  }else{
+                       pos = leftLowestOperator();
+                      exprHeadNode = (void*)new constIdentOperatorNode(tokenInRow[startPos].category,
+                                                                       tokenInRow[startPos].token);
+                       exprHeadNode->left = parseExpr(startPos);//left hand side
+                       exprHeadNode->right=parseExpr(pos+1);//right hand side
+                  }
+             }else{
+                  printf("parsing error, expect ; \n");
+             }
+    }else{//find
+             tokenInRow[startPos].category == T_Logic_Not      
+             tokenInRow[startPos].category == T_Sub            
+    }
+
 
 };
 
