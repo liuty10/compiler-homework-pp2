@@ -5,4 +5,8 @@ double main(bool x, bool y, bool z){
     double e;
     double f;
     double g;
+    break;
+    return 1;
+    return a+b;
+    return (c+d);
 }

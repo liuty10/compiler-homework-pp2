@@ -46,39 +46,28 @@ class Expr{
              int    selfcategory;
              constIdentOperatorNode* exprHeadNode;
              int    nextCategory;// since actuals can be a list of Exprs.
-             void*  next;  // The last two rows are for call(actuals) only,
+             Expr*  next;  // The last two rows are for call(actuals) only,
 };
 
 int Expr::leftLowestOperator(int* op, int startPos, int endPos){
     int i;
+    int lowest=36;
     for(i=startPos; i<=endPos; i++){
-        if(tokenInRow[i].category == T_Assign){
-             op = T_Assign;
-             return i;
-        }else if(tokenInRow[i].category == T_Logic_Or){
-  
-        }else if(tokenInRow[i].category == T_Logic_And){
- 
-        }else if(tokenInRow[i].category == T_Equal    ||
-                 tokenInRow[i].category == T_NotEqual ){
-             
-        }else if(tokenInRow[i].category == T_Less         ||
-                 tokenInRow[i].category == T_LessEqual    ||
-                 tokenInRow[i].category == T_Larger       ||
-                 tokenInRow[i].category == T_GreaterEqual ){
-              
-        }else if(tokenInRow[i].category == T_Add ||
-                 tokenInRow[i].category == T_Sub ){
-
-        }else if(tokenInRow[i].category == T_Mul     ||
-                 tokenInRow[i].category == T_Div     ||
-                 tokenInRow[i].category == T_Percent ){
-                 
-        }else if(tokenInRow[i].category == T_Logic_Not){
-
+        if(tokenInRow[i].category >= 21 && tokenInRow[i].category <=35){
+             if(tokenInRow[i].category < lowest){
+                  lowest = i;
+             }else{
+                  continue;
+             }
         }else{
              continue;
         }
+    }
+    if(lowest == 36){
+        return -1;
+    }else{
+        *op = tokenInRow[lowest].category;
+        return lowest;
     }
 };
 
@@ -91,65 +80,24 @@ constIdentOperatorNode* Expr::parseExpr(int startPos, int endPos){
     }
     pos = leftLowestOperator(&op, startPos, endPos);
     if(pos == -1){//not find
-          return (void*)new constIdentOperatorNode(tokenInRow[startPos].category, tokenInRow[startPos].token);
+          return new constIdentOperatorNode(tokenInRow[startPos].category, tokenInRow[startPos].token);
     }else if(pos == startPos){
           if(tokenInRow[startPos].category==T_Sub || tokenInRow[startPos].category == T_Logic_Not){
-               constIdentOperatorNode* exprHeadNode_tmp = (void*)new constIdentOperatorNode(op,tokenInRow[pos].token);
+               constIdentOperatorNode* exprHeadNode_tmp = new constIdentOperatorNode(op,tokenInRow[pos].token);
                exprHeadNode_tmp->left = NULL;//left hand side
                exprHeadNode_tmp->right= parseExpr(pos+1, endPos);//right hand side
-               return exprHeadNode_tmp
+               return exprHeadNode_tmp;
           }else{
                printf("parsing expr error, it's not a unary\n");
           }
     }else{//find 
-          constIdentOperatorNode* exprHeadNode_tmp = (void*)new constIdentOperatorNode(op,tokenInRow[pos].token);
+          constIdentOperatorNode* exprHeadNode_tmp = new constIdentOperatorNode(op,tokenInRow[pos].token);
           exprHeadNode_tmp->left = parseExpr(startPos, pos-1);//left hand side
           exprHeadNode_tmp->right= parseExpr(pos+1, endPos);//right hand side
           return exprHeadNode_tmp;
     }
 };
 
-//TODO:
-/*
-constIdentOperatorNode* Expr::parseExpr(int startPos, int endPoint){
-    int category = -1;
-    int op = -1;
-    int pos= -1;
-    if( tokenInRow[startPos].category == T_SemiColon ||
-        tokenInRow[startPos].category == T_Comma     ||
-        tokenInRow[startPos].category == T_RPara     ){
-             return NULL;
-    }else if(tokenInRow[startPos].category == T_NULL           ||
-             tokenInRow[startPos].category == T_BoolConstant   ||
-             tokenInRow[startPos].category == T_IntConstant    ||
-             tokenInRow[startPos].category == T_DoubleConstant ||
-             tokenInRow[startPos].category == T_StringConstant ||
-             tokenInRow[startPos].category == T_Identifier     ){ //T_CONSTANT
-
-             if(startPos + 1 < rowTokenNum){
-                  if(tokenInRow[startPos+1].category == T_SemiColon ||
-                     tokenInRow[startPos+1].category == T_Comma     ||
-                     tokenInRow[startPos+1].category == T_RPara     ){
-
-                  exprHeadNode = (void*)new constIdentOperatorNode(tokenInRow[startPos].category,
-                                                                   tokenInRow[startPos].token);
-                  }else{
-                       pos = leftLowestOperator(&op);
-                       exprHeadNode = (void*)new constIdentOperatorNode(op,tokenInRow[pos].token);
-                       exprHeadNode->left = parseExpr(startPos);//left hand side
-                       exprHeadNode->right=parseExpr(pos+1);//right hand side
-                  }
-             }else{
-                  printf("parsing error, expect ; \n");
-             }
-    }else if(tokenInRow[startPos].category == T_Logic_Not ||
-             tokenInRow[startPos].category == T_Sub ){
-            
-    }else{//report errors
-
-    }
-};
-*/
 // STMT_BLOCK
 // we need a linked list to save each stmt infor
 // This is actually an infor table for all statements.
@@ -306,7 +254,7 @@ void printStmt::parseActuals(){
               exit(0);
          }
      }
-     int argc_num = getArgcNum(&commaPos);
+     int argc_num = getArgcNum(commaPos);
      for(i=0;i<argc_num;i++){
         Expr* expr = new Expr();
         expr->exprHeadNode = expr->parseExpr(commaPos[i],commaPos[i+1]);
@@ -399,7 +347,14 @@ VariableDecl* FunctionDecl::parseFormals(FILE* input_file,int i){
                      currentFormal = currentFormal->formal;
                 }
             }else{
-                printf("parse formal error, expect ident\n");
+                printf("\n*** Error line %d.\n", tokenInRow[i].row);
+                int j;
+                printf("%s ",szLineBuffer);
+                for(j=0;j<tokenInRow[i-1].right-1;j++){
+                    printf(" ");
+                }
+                printf("^\n");
+                printf("*** syntax error\n\n");
                 exit(0);
             }
         }else if(formal_type_start == 2){
@@ -660,6 +615,7 @@ class Program{
       };
       bool parseProgram(FILE* input_file);
       void printAST();
+      void printAnExpr(constIdentOperatorNode* node, int space);
       public:
            Decl  *declTableStart;
            Decl  *declTableCurrent;
@@ -747,27 +703,105 @@ bool Program::parseProgram(FILE* input_file){
         return true;
 };
 
+void Program::printAnExpr(constIdentOperatorNode* node, int space){
+     int i;
+     switch(node->category){
+           case T_Assign:
+                printf("AssignExpr:\n");
+                break;
+           case T_NULL:
+                break;
+           case T_BoolConstant:
+                break;
+           case T_IntConstant:
+                for(i=0;i<space;i++) printf(" ");
+                printf("IntConstant:%s\n", node->ident);
+                break;
+           case T_DoubleConstant:
+                break;
+           case T_StringConstant:
+                break;
+           case T_Identifier:
+                for(i=0;i<space;i++) printf(" ");
+                printf("FieldAccess:\n");
+                for(i=0;i<space;i++) printf(" ");
+                printf("    Identifier:%s\n", node->ident);
+                break;
+           case T_Logic_Or:
+                break;
+           case T_Logic_And:
+                break;
+           case T_Logic_Not:
+                break;
+           case T_Add:
+                for(i=0;i<space;i++) printf(" ");
+                printf("ArithmeticExpr:\n");
+                if(node->left != NULL){
+                     printAnExpr(node->left, space+4);
+                }
+                for(i=0;i<space+4;i++) printf(" ");
+                printf("Operator: +\n");
+                if(node->right != NULL){
+                     printAnExpr(node->right, space+4);
+                }
+                break;
+           case T_Sub:
+                break;
+           case T_Mul:
+                break;
+           case T_Div:
+                break;
+           case T_Percent:
+                break;
+           case T_Equal:
+                break;
+           case T_NotEqual:
+                break;
+           case T_Less:
+                break;
+           case T_LessEqual:
+                break;
+           case T_Larger:
+                break;
+           case T_GreaterEqual:
+                break;
+           default:
+                break;
+     }
+};
+
 void Program::printAST(){
            Decl* curDeclP = declTableStart;
+           printf("Program:\n");
            while(curDeclP != NULL){
                     if(curDeclP->category == DECL_VAR){
-                         printf("type: %d\tident:%s\n",  curDeclP->declType, curDeclP->ident);
+                         printf("    VarDecl:\n");
+                         printf("        Type: %d\n        Identifier:%s\n",curDeclP->declType, curDeclP->ident);
                     }else if(curDeclP->category == DECL_FUNC){
+                         printf("    FnDecl:\n");
                          FunctionDecl* function = (FunctionDecl*)(curDeclP->declPointer);
-                         printf("functype: %d\tname:%s\n", function->type, function->ident);
+                         printf("        (return type) Type:%d\n", function->type);
+                         printf("        Identifier:%s\n", function->ident);
                          VariableDecl *formal = function->formal;
+                         if(formal!=NULL){
+                               printf("        (formals) VarDecl:\n");
+                         }
                          while(formal != NULL){
-                              printf("\tFormals:%d\t %s\t", formal->type, formal->ident);
+                              printf("            Type: %d\n            Identifier:%s\n",formal->type, formal->ident);
                               formal = formal->formal;
                          }
-                         printf("\n");
                          bodyStmt *stmtInfor = function->funcstmt;
-                         //bodyStmt *stmtInfor = function->stmtFirstInfor;
+                              printf("        (body) StmtBlock:\n");
                          while(stmtInfor != NULL){
                               if(stmtInfor->category == STMT_VAR){
-                                  printf("\tFunc body:%d\t %s\t", ((VariableDecl*)(stmtInfor->stmtPointer))->type, ((VariableDecl*)(stmtInfor->stmtPointer))->ident);
+                                  printf("            VarDecl:\n");
+                                  printf("                Type: %d\n", ((VariableDecl*)(stmtInfor->stmtPointer))->type);
+                                  printf("                Identifier: %s\n", ((VariableDecl*)(stmtInfor->stmtPointer))->ident);
                               }else if(stmtInfor->category == STMT_BREAK){
-                                  printf("\tFunc body:%s\n", "break");
+                                  printf("            BreakStmt:%s\n", "break");
+                              }else if(stmtInfor->category == STMT_RET){
+                                  printf("            ReturnStmt:\n");
+                                  printAnExpr(((retStmt*)(stmtInfor->stmtPointer))->retExpr->exprHeadNode, 16);
                               }else{
 
                               }
