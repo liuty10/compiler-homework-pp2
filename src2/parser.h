@@ -40,7 +40,8 @@ class Expr{
 
              };
              ~Expr(){};
-             int parseExpr(int startPos);
+             constIdentOperatorNode* parseExpr(int startPos, int endPoint);
+             int leftLowestOperator(int* op, int startPos, int endPos);
        public:
              int    selfcategory;
              constIdentOperatorNode* exprHeadNode;
@@ -48,15 +49,76 @@ class Expr{
              void*  next;  // The last two rows are for call(actuals) only,
 };
 
+int Expr::leftLowestOperator(int* op, int startPos, int endPos){
+    int i;
+    for(i=startPos; i<=endPos; i++){
+        if(tokenInRow[i].category == T_Assign){
+             op = T_Assign;
+             return i;
+        }else if(tokenInRow[i].category == T_Logic_Or){
+  
+        }else if(tokenInRow[i].category == T_Logic_And){
+ 
+        }else if(tokenInRow[i].category == T_Equal    ||
+                 tokenInRow[i].category == T_NotEqual ){
+             
+        }else if(tokenInRow[i].category == T_Less         ||
+                 tokenInRow[i].category == T_LessEqual    ||
+                 tokenInRow[i].category == T_Larger       ||
+                 tokenInRow[i].category == T_GreaterEqual ){
+              
+        }else if(tokenInRow[i].category == T_Add ||
+                 tokenInRow[i].category == T_Sub ){
+
+        }else if(tokenInRow[i].category == T_Mul     ||
+                 tokenInRow[i].category == T_Div     ||
+                 tokenInRow[i].category == T_Percent ){
+                 
+        }else if(tokenInRow[i].category == T_Logic_Not){
+
+        }else{
+             continue;
+        }
+    }
+};
+
+constIdentOperatorNode* Expr::parseExpr(int startPos, int endPos){
+    int op = -1;
+    int pos= -1;
+    if(tokenInRow[startPos].category == T_LPara && tokenInRow[endPos].category == T_RPara){
+         startPos++;
+         endPos--;
+    }
+    pos = leftLowestOperator(&op, startPos, endPos);
+    if(pos == -1){//not find
+          return (void*)new constIdentOperatorNode(tokenInRow[startPos].category, tokenInRow[startPos].token);
+    }else if(pos == startPos){
+          if(tokenInRow[startPos].category==T_Sub || tokenInRow[startPos].category == T_Logic_Not){
+               constIdentOperatorNode* exprHeadNode_tmp = (void*)new constIdentOperatorNode(op,tokenInRow[pos].token);
+               exprHeadNode_tmp->left = NULL;//left hand side
+               exprHeadNode_tmp->right= parseExpr(pos+1, endPos);//right hand side
+               return exprHeadNode_tmp
+          }else{
+               printf("parsing expr error, it's not a unary\n");
+          }
+    }else{//find 
+          constIdentOperatorNode* exprHeadNode_tmp = (void*)new constIdentOperatorNode(op,tokenInRow[pos].token);
+          exprHeadNode_tmp->left = parseExpr(startPos, pos-1);//left hand side
+          exprHeadNode_tmp->right= parseExpr(pos+1, endPos);//right hand side
+          return exprHeadNode_tmp;
+    }
+};
+
 //TODO:
-int Expr::parseExpr(int startPos){
-    //return type of Expr
+/*
+constIdentOperatorNode* Expr::parseExpr(int startPos, int endPoint){
     int category = -1;
+    int op = -1;
     int pos= -1;
     if( tokenInRow[startPos].category == T_SemiColon ||
         tokenInRow[startPos].category == T_Comma     ||
         tokenInRow[startPos].category == T_RPara     ){
-             return category;
+             return NULL;
     }else if(tokenInRow[startPos].category == T_NULL           ||
              tokenInRow[startPos].category == T_BoolConstant   ||
              tokenInRow[startPos].category == T_IntConstant    ||
@@ -72,23 +134,22 @@ int Expr::parseExpr(int startPos){
                   exprHeadNode = (void*)new constIdentOperatorNode(tokenInRow[startPos].category,
                                                                    tokenInRow[startPos].token);
                   }else{
-                       pos = leftLowestOperator();
-                      exprHeadNode = (void*)new constIdentOperatorNode(tokenInRow[startPos].category,
-                                                                       tokenInRow[startPos].token);
+                       pos = leftLowestOperator(&op);
+                       exprHeadNode = (void*)new constIdentOperatorNode(op,tokenInRow[pos].token);
                        exprHeadNode->left = parseExpr(startPos);//left hand side
                        exprHeadNode->right=parseExpr(pos+1);//right hand side
                   }
              }else{
                   printf("parsing error, expect ; \n");
              }
-    }else{//find
-             tokenInRow[startPos].category == T_Logic_Not      
-             tokenInRow[startPos].category == T_Sub            
+    }else if(tokenInRow[startPos].category == T_Logic_Not ||
+             tokenInRow[startPos].category == T_Sub ){
+            
+    }else{//report errors
+
     }
-
-
 };
-
+*/
 // STMT_BLOCK
 // we need a linked list to save each stmt infor
 // This is actually an infor table for all statements.
@@ -137,9 +198,8 @@ class Stmt{
 // STMT_IF
 class ifStmt:public Stmt{
        public:
-             ifStmt(Expr* condition, int categ, bodyStmt* ifstart, bodyStmt* elsestmt){
+             ifStmt(Expr* condition, bodyStmt* ifstart, bodyStmt* elsestmt){
                   cond     = condition;
-                  category = categ;
                   ifstmt   = ifstart;
                   elsestmt = elsestmt;
              };
@@ -147,7 +207,7 @@ class ifStmt:public Stmt{
 
              }
        public:
-             int category;
+             //int category;
              Expr* cond;
              bodyStmt* ifstmt;
              bodyStmt* elsestmt;
@@ -157,16 +217,16 @@ class ifStmt:public Stmt{
 class whileStmt:public Stmt{
 //class whileStmt::public Stmt{
        public:
-             whileStmt(Expr* condition, int categ, bodyStmt* whilestmt){
+             whileStmt(Expr* condition, bodyStmt* whilestmt){
                   cond         = condition;
-                  condCategory = categ;
+                  //condCategory = categ;
                   stmt         = whilestmt;
              }
              ~whileStmt(){
 
              }
        public:
-       int condCategory;
+       //int condCategory;
        Expr* cond;
        bodyStmt* stmt;
 };
@@ -174,23 +234,16 @@ class whileStmt:public Stmt{
 // STMT_FOR
 class forStmt:public Stmt{
       public:
-            forStmt(Expr* initExpr, Expr* condExpr, Expr* updateExpr,
-                    int initCateg, int condCateg, int updateCateg, bodyStmt* forstmt){
+            forStmt(Expr* initExpr, Expr* condExpr, Expr* updateExpr, bodyStmt* forstmt){
 
                             init = initExpr;
                             cond = condExpr;
                           update = updateExpr;
-                  initCategory   = initCateg;
-                  condCategory   = condCateg;
-                  updateCategory = updateCateg;
             };
             ~forStmt(){
 
             }
       public:
-            int initCategory;
-            int condCategory;
-            int updateCategory;
             Expr* init;
             Expr* cond;
             Expr* update;
@@ -200,15 +253,16 @@ class forStmt:public Stmt{
 // STMT_RET
 class retStmt{
       public:
-            retStmt(Expr* ret, int categ){
-                 category = categ;
+            //retStmt(Expr* ret, int categ){
+            retStmt(Expr* ret){
+                 //category = categ;
                  retExpr  = ret;
             };
             ~retStmt(){
 
             };
       public:
-            int category;
+            //int category;
             Expr* retExpr;
 };
 
@@ -223,15 +277,18 @@ class printStmt{
             printStmt(){
             };
             void parseActuals();
-            int getArgcNum(){
+            int getArgcNum(int commaPos[]){
                 int i=0;
                 int argc_num=0;
+                commaPos[0] = 2;
                 for(i=0;i<rowTokenNum;i++){
                    if(tokenInRow[i].category == T_Comma){
                       argc_num++;
+                      commaPos[argc_num] = i;
                    }
                 }
-                return argc_num;
+                commaPos[argc_num+1] = rowTokenNum;
+                return (argc_num+1);
             };
        public:
             Expr* actualList;
@@ -240,10 +297,19 @@ class printStmt{
 
 void printStmt::parseActuals(){
      int i = 0;
-     int argc_num = getArgcNum();
+     int commaPos[100];
+     if(tokenInRow[2].category == T_RPara){
+         if(tokenInRow[3].category == T_SemiColon){
+              return;//no arguments
+         }else{
+              printf("Parse print error, expect ;\n");
+              exit(0);
+         }
+     }
+     int argc_num = getArgcNum(&commaPos);
      for(i=0;i<argc_num;i++){
         Expr* expr = new Expr();
-        expr->parseExpr(2);
+        expr->exprHeadNode = expr->parseExpr(commaPos[i],commaPos[i+1]);
         if(actualList == NULL){
              actualList = expr;
              cur_actual = expr;
@@ -399,7 +465,7 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                          tokenInRow[0].category==T_ReadLine       ){
                          Expr*        expr = new Expr();
                          bodyStmt* exprTmp = new bodyStmt(STMT_EXPR,(void*)expr);
-                         expr->parseExpr(0);
+                         expr->exprHeadNode=expr->parseExpr(0,rowTokenNum);
                          if(retPointer == NULL){
                               retPointer = exprTmp;
                               stmtCurrentInfor = exprTmp;
@@ -411,7 +477,8 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                       Expr*          cond = new Expr();
                       bodyStmt*   ifStart = new bodyStmt();
                       bodyStmt* elseStart = new bodyStmt();
-                      ifStmt*      ifstmt = new ifStmt(cond, cond->parseExpr(2),ifStart, elseStart);
+                      cond->exprHeadNode  = cond->parseExpr(2, rowTokenNum);
+                      ifStmt*      ifstmt = new ifStmt(cond, ifStart, elseStart);
                       bodyStmt*    IfTmp  = new bodyStmt(STMT_IF,(void*)ifstmt);
                       //if there is a "{" in if stmt, multipleStmtFlag = 1;
                       //else multipleStmtFlag = 0;
@@ -431,7 +498,8 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                 }else if(tokenInRow[0].category==T_While){
                       Expr*            cond = new Expr();
                       bodyStmt*  whileStart = new bodyStmt();
-                      whileStmt*  whilestmt = new whileStmt(cond, cond->parseExpr(2), whileStart);
+                      cond->exprHeadNode    = cond->parseExpr(2, rowTokenNum);
+                      whileStmt*  whilestmt = new whileStmt(cond, whileStart);
                       bodyStmt*    WhileTmp = new bodyStmt(STMT_WHILE,(void*)whilestmt);
                       whileStart = whilestmt->parseStmtBlock(input_file);
 
@@ -450,11 +518,11 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                       int firstSemi, secondSemi;
                       firstSemi=secondSemi=0;
                       findSemiColonPos(&firstSemi, &secondSemi);
-                      forStmt*    forstmt = new forStmt(init, cond, update,
-                                                        init->parseExpr(2), cond->parseExpr(firstSemi+1),
-                                                        update->parseExpr(secondSemi+1),forStart);
-
-                      bodyStmt*    ForTmp = new bodyStmt(STMT_FOR,(void*)forstmt);
+                      init->exprHeadNode   = init->parseExpr(2, firstSemi);
+                      cond->exprHeadNode   = cond->parseExpr(firstSemi+1, secondSemi);
+                      update->exprHeadNode = update->parseExpr(secondSemi+1, rowTokenNum);
+                      forStmt*    forstmt  = new forStmt(init, cond, update, forStart);
+                      bodyStmt*    ForTmp  = new bodyStmt(STMT_FOR,(void*)forstmt);
                       forStart=forstmt->parseStmtBlock(input_file);
                       if(retPointer == NULL){
                            retPointer = ForTmp;
@@ -465,7 +533,8 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                       }
                 }else if(tokenInRow[0].category==T_Return){
                       Expr*     retexpr = new Expr();
-                      retStmt*  retstmt = new retStmt(retexpr, retexpr->parseExpr(1));
+                      retexpr->exprHeadNode = retexpr->parseExpr(1, rowTokenNum);
+                      retStmt*  retstmt = new retStmt(retexpr);
                       bodyStmt*  RetTmp = new bodyStmt(STMT_RET,(void*)retstmt);
 
                       if(retPointer == NULL){
