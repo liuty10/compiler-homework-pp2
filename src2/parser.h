@@ -551,7 +551,14 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                 }else if(tokenInRow[0].category==T_RCurvePara){//StmtBlockEnd
                       return retPointer;
                 }else {//Expr
-                      printf("Unexpected case, token category: %d\n", tokenInRow[0].category);
+                      printf("\n*** Error line %d.\n", tokenInRow[0].row);
+                      int j;
+                      printf("%s ",szLineBuffer);
+                      for(j=0;j<tokenInRow[0].left-2;j++){
+                          printf(" ");
+                      }
+                      printf("^\n");
+                      printf("*** syntax error\n\n");
                       exit(0);
                 }
         }
