@@ -816,6 +816,14 @@ void Program::printAnExpr(constIdentOperatorNode* node, int space){
                 break;
            case T_GreaterEqual:
                 break;
+           case T_ReadInteger:
+                for(i=0;i<space;i++) printf(" ");
+                printf("ReadIntegerExpr:\n");
+                break;
+           case T_ReadLine:
+                for(i=0;i<space;i++) printf(" ");
+                printf("ReadLineExpr:\n");
+                break;
            default:
                 break;
      }
@@ -859,7 +867,8 @@ void Program::printAST(){
                                   if(printstmt->actualList!=NULL){
                                       Expr* printexpr = printstmt->actualList;
                                       while(printexpr){
-                                          printAnExpr(printexpr->exprHeadNode, 16);
+                                          printf("                (args) ");
+                                          printAnExpr(printexpr->exprHeadNode,16);
                                           printexpr = printexpr->next;
                                       }
                                   }
