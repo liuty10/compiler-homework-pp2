@@ -232,7 +232,7 @@ class printStmt{
                 for(i=0;i<rowTokenNum;i++){
                    if(tokenInRow[i].category == T_Comma){
                       argc_num++;
-                      commaPos[argc_num] = i;
+                      commaPos[argc_num] = i+1;
                    }
                 }
                 commaPos[argc_num+1] = rowTokenNum;
@@ -257,7 +257,11 @@ void printStmt::parseActuals(){
      int argc_num = getArgcNum(commaPos);
      for(i=0;i<argc_num;i++){
         Expr* expr = new Expr();
-        expr->exprHeadNode = expr->parseExpr(commaPos[i],commaPos[i+1]);
+        if(tokenInRow[i].category == T_String){
+           expr->selfcategory = T_String;
+           expr->exprHeadNode = new constIdentOperatorNode(T_String, tokenInRow[i].token);
+        }else
+           expr->exprHeadNode = expr->parseExpr(commaPos[i],commaPos[i+1]);
         if(actualList == NULL){
              actualList = expr;
              cur_actual = expr;
@@ -707,25 +711,42 @@ void Program::printAnExpr(constIdentOperatorNode* node, int space){
      int i;
      switch(node->category){
            case T_Assign:
+                for(i=0;i<space;i++) printf(" ");
                 printf("AssignExpr:\n");
+                if(node->left != NULL){
+                     printAnExpr(node->left, space+4);
+                }
+                for(i=0;i<space+4;i++) printf(" ");
+                printf("Operator: =\n");
+                if(node->right != NULL){
+                     printAnExpr(node->right, space+4);
+                }
                 break;
            case T_NULL:
+                for(i=0;i<space;i++) printf(" ");
+                printf("nullConstant: %s\n", node->ident);
                 break;
            case T_BoolConstant:
+                for(i=0;i<space;i++) printf(" ");
+                printf("BoolConstant: %s\n", node->ident);
                 break;
            case T_IntConstant:
                 for(i=0;i<space;i++) printf(" ");
-                printf("IntConstant:%s\n", node->ident);
+                printf("IntConstant: %s\n", node->ident);
                 break;
            case T_DoubleConstant:
+                for(i=0;i<space;i++) printf(" ");
+                printf("DoubleConstant: %s\n", node->ident);
                 break;
            case T_StringConstant:
+                for(i=0;i<space;i++) printf(" ");
+                printf("StringConstant: %s\n", node->ident);
                 break;
            case T_Identifier:
                 for(i=0;i<space;i++) printf(" ");
                 printf("FieldAccess:\n");
                 for(i=0;i<space;i++) printf(" ");
-                printf("    Identifier:%s\n", node->ident);
+                printf("    Identifier: %s\n", node->ident);
                 break;
            case T_Logic_Or:
                 break;
@@ -746,10 +767,40 @@ void Program::printAnExpr(constIdentOperatorNode* node, int space){
                 }
                 break;
            case T_Sub:
+                for(i=0;i<space;i++) printf(" ");
+                printf("ArithmeticExpr:\n");
+                if(node->left != NULL){
+                     printAnExpr(node->left, space+4);
+                }
+                for(i=0;i<space+4;i++) printf(" ");
+                printf("Operator: -\n");
+                if(node->right != NULL){
+                     printAnExpr(node->right, space+4);
+                }
                 break;
            case T_Mul:
+                for(i=0;i<space;i++) printf(" ");
+                printf("ArithmeticExpr:\n");
+                if(node->left != NULL){
+                     printAnExpr(node->left, space+4);
+                }
+                for(i=0;i<space+4;i++) printf(" ");
+                printf("Operator: *\n");
+                if(node->right != NULL){
+                     printAnExpr(node->right, space+4);
+                }
                 break;
            case T_Div:
+                for(i=0;i<space;i++) printf(" ");
+                printf("ArithmeticExpr:\n");
+                if(node->left != NULL){
+                     printAnExpr(node->left, space+4);
+                }
+                for(i=0;i<space+4;i++) printf(" ");
+                printf("Operator: /\n");
+                if(node->right != NULL){
+                     printAnExpr(node->right, space+4);
+                }
                 break;
            case T_Percent:
                 break;
@@ -781,7 +832,7 @@ void Program::printAST(){
                          printf("    FnDecl:\n");
                          FunctionDecl* function = (FunctionDecl*)(curDeclP->declPointer);
                          printf("        (return type) Type:%d\n", function->type);
-                         printf("        Identifier:%s\n", function->ident);
+                         printf("        Identifier: %s\n", function->ident);
                          VariableDecl *formal = function->formal;
                          if(formal!=NULL){
                                printf("        (formals) VarDecl:\n");
@@ -802,6 +853,19 @@ void Program::printAST(){
                               }else if(stmtInfor->category == STMT_RET){
                                   printf("            ReturnStmt:\n");
                                   printAnExpr(((retStmt*)(stmtInfor->stmtPointer))->retExpr->exprHeadNode, 16);
+                              }else if(stmtInfor->category == STMT_PRINT){
+                                  printf("            PrintStmt:\n");
+                                  printStmt* printstmt = ((printStmt*)(stmtInfor->stmtPointer));
+                                  if(printstmt->actualList!=NULL){
+                                      Expr* printexpr = printstmt->actualList;
+                                      while(printexpr){
+                                          printAnExpr(printexpr->exprHeadNode, 16);
+                                          printexpr = printexpr->next;
+                                      }
+                                  }
+                              }else if(stmtInfor->category == STMT_EXPR){
+                                  printAnExpr(((Expr*)(stmtInfor->stmtPointer))->exprHeadNode, 12);
+                                   
                               }else{
 
                               }

@@ -73,7 +73,7 @@ int main(int argc, char* argv[]){
 	rewind(processed_file);
 
         Program *prog = (Program*)new Program();
-        prog->parseProgram(processed_file);
+        //prog->parseProgram(processed_file);
 
         if(!prog->parseProgram(processed_file)){
              printf("Parse Errors.\n");
