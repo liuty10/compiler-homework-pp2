@@ -17,6 +17,7 @@ char szLineBuffer[MAX_LINE_SIZE + 1];//input buffer for fgets
 int rowTokenNum;
 int row_index;
 int nextRowError = 0;
+int globalNextParsePos=-1;
 //EXPR_CONSTANT
 //EXPR_IDENT
 class constIdentOperatorNode{
@@ -81,6 +82,7 @@ constIdentOperatorNode* Expr::parseExpr(int startPos, int endPos){
     }
     pos = leftLowestOperator(&op, startPos, endPos);
     if(pos == -1){//not find
+          globalNextParsePos = startPos;
           return new constIdentOperatorNode(tokenInRow[startPos].category, tokenInRow[startPos].token);
     }else if(pos == startPos){
           if(tokenInRow[startPos].category==T_Sub || tokenInRow[startPos].category == T_Logic_Not){
@@ -441,6 +443,17 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                          Expr*        expr = new Expr();
                          bodyStmt* exprTmp = new bodyStmt(STMT_EXPR,(void*)expr);
                          expr->exprHeadNode=expr->parseExpr(0,rowTokenNum-2);
+                         if(globalNextParsePos != rowTokenNum-2){
+                             printf("\n*** Error line %d.\n", tokenInRow[globalNextParsePos].row);
+                             int j;
+                             printf("%s ",szLineBuffer);
+                             for(j=0;j<tokenInRow[globalNextParsePos].right-1;j++){
+                                 printf(" ");
+                             }
+                             printf("^\n");
+                             printf("*** syntax error\n\n");
+                             exit(0);
+                         }
                          if(retPointer == NULL){
                               retPointer = exprTmp;
                               stmtCurrentInfor = exprTmp;
