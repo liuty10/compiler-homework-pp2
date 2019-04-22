@@ -107,6 +107,7 @@
 #define STMT_BREAK     6
 #define STMT_PRINT     7
 #define STMT_EXPR      8
+#define STMT_CALL      100
 
 #define EXPR_ASSIGN    9
 #define EXPR_CONSTANT  10
