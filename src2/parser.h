@@ -16,6 +16,7 @@ bool parser(FILE* input, FILE* output);
 char szLineBuffer[MAX_LINE_SIZE + 1];//input buffer for fgets
 int rowTokenNum;
 int row_index;
+int nextRowError = 0;
 //EXPR_CONSTANT
 //EXPR_IDENT
 class constIdentOperatorNode{
@@ -64,7 +65,7 @@ int Expr::leftLowestOperator(int* op, int startPos, int endPos){
         }
     }
     if(lowest == 36){
-        return -1;
+            return -1;
     }else{
         *op = tokenInRow[lowest].category;
         return lowest;
@@ -261,7 +262,7 @@ void printStmt::parseActuals(){
            expr->selfcategory = T_String;
            expr->exprHeadNode = new constIdentOperatorNode(T_String, tokenInRow[i].token);
         }else
-           expr->exprHeadNode = expr->parseExpr(commaPos[i],commaPos[i+1]);
+           expr->exprHeadNode = expr->parseExpr(commaPos[i],commaPos[i+1]-2);
         if(actualList == NULL){
              actualList = expr;
              cur_actual = expr;
@@ -389,6 +390,17 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
 		row_index++;
 		if(szLineBuffer[0] == '\n') continue;
 		rowTokenNum = getTokens(szLineBuffer, row_index);//tokens for this row in array.
+                if(nextRowError == 1){
+                      printf("\n*** Error line %d.\n", tokenInRow[0].row);
+                      int j;
+                      printf("%s ",szLineBuffer);
+                      for(j=0;j<tokenInRow[0].left-2;j++){
+                          printf(" ");
+                      }
+                      printf("^\n");
+                      printf("*** syntax error\n\n");
+                      exit(0);
+                }
                 if(tokenInRow[0].category==T_Int || tokenInRow[0].category==T_Double ||
                    tokenInRow[0].category==T_Bool|| tokenInRow[0].category==T_String){
                         if(tokenInRow[1].category == T_Identifier){
@@ -422,9 +434,13 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                          tokenInRow[0].category==T_StringConstant ||
                          tokenInRow[0].category==T_ReadInteger    ||
                          tokenInRow[0].category==T_ReadLine       ){
+                         if(tokenInRow[rowTokenNum-1].category != T_SemiColon){
+                             nextRowError = 1;
+                             continue;
+                         }
                          Expr*        expr = new Expr();
                          bodyStmt* exprTmp = new bodyStmt(STMT_EXPR,(void*)expr);
-                         expr->exprHeadNode=expr->parseExpr(0,rowTokenNum);
+                         expr->exprHeadNode=expr->parseExpr(0,rowTokenNum-2);
                          if(retPointer == NULL){
                               retPointer = exprTmp;
                               stmtCurrentInfor = exprTmp;
@@ -436,7 +452,7 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                       Expr*          cond = new Expr();
                       bodyStmt*   ifStart = new bodyStmt();
                       bodyStmt* elseStart = new bodyStmt();
-                      cond->exprHeadNode  = cond->parseExpr(2, rowTokenNum);
+                      cond->exprHeadNode  = cond->parseExpr(2, rowTokenNum-1);
                       ifStmt*      ifstmt = new ifStmt(cond, ifStart, elseStart);
                       bodyStmt*    IfTmp  = new bodyStmt(STMT_IF,(void*)ifstmt);
                       //if there is a "{" in if stmt, multipleStmtFlag = 1;
@@ -457,7 +473,7 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                 }else if(tokenInRow[0].category==T_While){
                       Expr*            cond = new Expr();
                       bodyStmt*  whileStart = new bodyStmt();
-                      cond->exprHeadNode    = cond->parseExpr(2, rowTokenNum);
+                      cond->exprHeadNode    = cond->parseExpr(2, rowTokenNum-1);
                       whileStmt*  whilestmt = new whileStmt(cond, whileStart);
                       bodyStmt*    WhileTmp = new bodyStmt(STMT_WHILE,(void*)whilestmt);
                       whileStart = whilestmt->parseStmtBlock(input_file);
@@ -479,7 +495,7 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                       findSemiColonPos(&firstSemi, &secondSemi);
                       init->exprHeadNode   = init->parseExpr(2, firstSemi);
                       cond->exprHeadNode   = cond->parseExpr(firstSemi+1, secondSemi);
-                      update->exprHeadNode = update->parseExpr(secondSemi+1, rowTokenNum);
+                      update->exprHeadNode = update->parseExpr(secondSemi+1, rowTokenNum-1);
                       forStmt*    forstmt  = new forStmt(init, cond, update, forStart);
                       bodyStmt*    ForTmp  = new bodyStmt(STMT_FOR,(void*)forstmt);
                       forStart=forstmt->parseStmtBlock(input_file);
@@ -492,9 +508,13 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                       }
                 }else if(tokenInRow[0].category==T_Return){
                       Expr*     retexpr = new Expr();
-                      retexpr->exprHeadNode = retexpr->parseExpr(1, rowTokenNum);
+                      retexpr->exprHeadNode = retexpr->parseExpr(1, rowTokenNum-2);
                       retStmt*  retstmt = new retStmt(retexpr);
                       bodyStmt*  RetTmp = new bodyStmt(STMT_RET,(void*)retstmt);
+                      if(tokenInRow[rowTokenNum-1].category != T_SemiColon){
+                          nextRowError = 1;
+                          continue;
+                      }
 
                       if(retPointer == NULL){
                            retPointer = RetTmp;
@@ -504,6 +524,10 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                            stmtCurrentInfor = stmtCurrentInfor->next;
                       }
                 }else if(tokenInRow[0].category==T_Break){
+                      if(tokenInRow[rowTokenNum-1].category != T_SemiColon){
+                          nextRowError = 1;
+                          continue;
+                      }
                      if(tokenInRow[1].category==T_SemiColon){
                          bodyStmt*  BreakTmp = new bodyStmt(STMT_BREAK, (void*)NULL);
                          if(retPointer == NULL){
@@ -520,6 +544,10 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                      }
                 }else if(tokenInRow[0].category==T_Print){
                       if(tokenInRow[1].category==T_LPara){
+                          if(tokenInRow[rowTokenNum-1].category != T_SemiColon){
+                            nextRowError = 1;
+                            continue;
+                          }
                           printStmt* printstmt = new printStmt();
                           bodyStmt*   PrintTmp = new bodyStmt(STMT_PRINT,(void*)printstmt);
                           printstmt->parseActuals();
