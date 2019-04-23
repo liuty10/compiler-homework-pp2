@@ -175,6 +175,8 @@ class Stmt{
       public:
            int multipleStmtFlag;
            bodyStmt* stmtCurrentInfor;
+           void printABlock(bodyStmt* stmt, int space);
+           void printAnExpr(constIdentOperatorNode* node, int space);
       private:
            void findSemiColonPos(int *firstPos, int *secondPos){
                 int i=0;
@@ -281,9 +283,12 @@ void printStmt::parseActuals(int start, int end){
      int argc_num = getArgcNum(commaPos, start, end);
      for(i=0;i<argc_num;i++){
         Expr* expr = new Expr();
-        if(tokenInRow[i].category == T_String){
-             expr->selfcategory = T_String;
-             expr->exprHeadNode = new constIdentOperatorNode(T_String, tokenInRow[i].token);
+        //if(tokenInRow[i].category == T_String){
+        if(tokenInRow[commaPos[i]].category == T_StringConstant){
+             expr->selfcategory = T_StringConstant;
+             //expr->selfcategory = T_String;
+             expr->exprHeadNode = new constIdentOperatorNode(T_StringConstant, tokenInRow[commaPos[i]].token);
+             //expr->exprHeadNode = new constIdentOperatorNode(T_String, tokenInRow[commaPos[i]].token);
         }else{
              expr->exprHeadNode = expr->parseExpr(commaPos[i],commaPos[i+1]-2);
         }
@@ -563,12 +568,14 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                            stmtCurrentInfor=stmtCurrentInfor->next;
                       }
                 }else if(tokenInRow[0].category==T_While){
+                      bodyStmt*  whileStart = NULL;
                       Expr*            cond = new Expr();
-                      bodyStmt*  whileStart = new bodyStmt();
                       cond->exprHeadNode    = cond->parseExpr(2, rowTokenNum-1);
+                      //bodyStmt*  whileStart = new bodyStmt();
                       whileStmt*  whilestmt = new whileStmt(cond, whileStart);
                       bodyStmt*    WhileTmp = new bodyStmt(STMT_WHILE,(void*)whilestmt);
                       whileStart = whilestmt->parseStmtBlock(input_file);
+                      whilestmt->stmt = whileStart;
 
                       if(retPointer == NULL){
                            retPointer = WhileTmp;
@@ -581,7 +588,8 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                       Expr*          init = new Expr();
                       Expr*          cond = new Expr();
                       Expr*        update = new Expr();
-                      bodyStmt*  forStart = new bodyStmt();
+                      bodyStmt*  forStart = NULL;
+                      //bodyStmt*  forStart = new bodyStmt();
                       int firstSemi, secondSemi;
                       firstSemi=secondSemi=0;
                       findSemiColonPos(&firstSemi, &secondSemi);
@@ -591,6 +599,7 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                       forStmt*    forstmt  = new forStmt(init, cond, update, forStart);
                       bodyStmt*    ForTmp  = new bodyStmt(STMT_FOR,(void*)forstmt);
                       forStart=forstmt->parseStmtBlock(input_file);
+                      forstmt->stmt        = forStart;
                       if(retPointer == NULL){
                            retPointer = ForTmp;
                            stmtCurrentInfor = ForTmp;
@@ -746,7 +755,6 @@ class Program{
       };
       bool parseProgram(FILE* input_file);
       void printAST();
-      void printAnExpr(constIdentOperatorNode* node, int space);
       public:
            Decl  *declTableStart;
            Decl  *declTableCurrent;
@@ -832,7 +840,7 @@ bool Program::parseProgram(FILE* input_file){
         return true;
 };
 
-void Program::printAnExpr(constIdentOperatorNode* node, int space){
+void Stmt::printAnExpr(constIdentOperatorNode* node, int space){
      int i;
      switch(node->category){
            case T_Assign:
@@ -1050,7 +1058,7 @@ void Program::printAnExpr(constIdentOperatorNode* node, int space){
                 printf("ReadLineExpr:\n");
                 break;
            case STMT_CALL:
-                //for(i=0;i<space;i++) printf(" ");
+                for(i=0;i<space;i++) printf(" ");
                 printf("Call:\n");
                 for(i=0;i<space;i++) printf(" ");
                 printf("    Indentifier:%s\n", node->ident);
@@ -1058,6 +1066,7 @@ void Program::printAnExpr(constIdentOperatorNode* node, int space){
                      printAnExpr(((funcCall*)(node->left))->actualList->exprHeadNode, space+4);
                 }
            default://function
+                printf("Empty\n");
                 break;
      }
 };
@@ -1066,48 +1075,79 @@ void Stmt::printABlock(bodyStmt* stmt, int space){
      bodyStmt* cur_stmt = stmt;
      while(cur_stmt != NULL){
           switch(cur_stmt->category){
-                case STMT_VAR:
+                case STMT_VAR:{
                     printf("            VarDecl:\n");
-                    printf("                Type: %d\n", ((VariableDecl*)(stmtInfor->stmtPointer))->type);
-                    printf("                Identifier: %s\n", ((VariableDecl*)(stmtInfor->stmtPointer))->ident);
-                    break;
-                case STMT_BREAK:
+                    printf("                Type: %d\n", ((VariableDecl*)(cur_stmt->stmtPointer))->type);
+                    printf("                Identifier: %s\n", ((VariableDecl*)(cur_stmt->stmtPointer))->ident);
+                    break;}
+                case STMT_BREAK:{
                     printf("            BreakStmt:%s\n", "break");
-                    break;
-                case STMT_RET:
+                    break;}
+                case STMT_RET:{
                     printf("            ReturnStmt:\n");
-                    printAnExpr(((retStmt*)(stmtInfor->stmtPointer))->retExpr->exprHeadNode, 16);
-                    break;
-                case STMT_PRINT:
+                    retStmt* retstmt = (retStmt*)(cur_stmt->stmtPointer);
+                    printAnExpr(retstmt->retExpr->exprHeadNode, 16);
+                    break;}
+                case STMT_PRINT:{
                     printf("            PrintStmt:\n");
-                    printStmt* printstmt = ((printStmt*)(stmtInfor->stmtPointer));
+                    printStmt* printstmt = (printStmt*)(cur_stmt->stmtPointer);
                     if(printstmt->actualList!=NULL){
                         Expr* printexpr = printstmt->actualList;
                         while(printexpr){
                             printf("                (args) ");
-                            printAnExpr(printexpr->exprHeadNode,16);
+                            printAnExpr(printexpr->exprHeadNode,space+4);
                             printexpr = printexpr->next;
                         }
                     }
-                case STMT_CALL:
+                    break;}
+                case STMT_CALL:{
                     printf("            Call:\n");
-                    funcCall* callstmt = ((funcCall*)(stmtInfor->stmtPointer));
+                    funcCall* callstmt = (funcCall*)(cur_stmt->stmtPointer);
                     printf("                Identifier: %s\n", callstmt->ident);
                     if(callstmt->actualList!=NULL){
                         Expr* callexpr = callstmt->actualList;
                         while(callexpr){
-                            printAnExpr(callexpr->exprHeadNode,16);
+                            printAnExpr(callexpr->exprHeadNode,space+4);
                             callexpr = callexpr->next;
                         }
                     }
-                case STMT_EXPR:
-                    printAnExpr(((Expr*)(stmtInfor->stmtPointer))->exprHeadNode, 12);
-                case STMT_WHILE:
+                    break;}
+                case STMT_EXPR:{
+                    printAnExpr(((Expr*)(cur_stmt->stmtPointer))->exprHeadNode, space);
+                    break;}
+                case STMT_WHILE:{
+                    whileStmt* whilestmt = (whileStmt*)(cur_stmt->stmtPointer);
                     printf("            WhileStmt:\n");
-                    //printf("               (test) RelationalExpr:\n");
-                    printAnExpr(((whileStmt*)(stmtInfor->stmtPointer))->cond->exprHeadNode, 16);
+                    printAnExpr(whilestmt->cond->exprHeadNode, space+4);
                     printf("                 (body) StmtBlock:\n");
-                    printABlock(((whileStmt*)(stmtInfor->stmtPointer))->stmt, 16);
+                    printABlock(whilestmt->stmt, space+4);
+                    break;}
+                case STMT_FOR:{
+                    forStmt* forstmt = (forStmt*)(cur_stmt->stmtPointer);
+                    printf("            ForStmt:\n");
+                    if(NULL==forstmt->init->exprHeadNode){
+                          printf("            (init)");
+                    }else{
+                         printf("            (init) ");
+                         printAnExpr(forstmt->init->exprHeadNode, space+4);
+                    }
+                    if(NULL==forstmt->cond->exprHeadNode){
+                          printf("            (test) ");
+                    }else{
+                         printf("            (test) ");
+                         printAnExpr(forstmt->cond->exprHeadNode, space+4);
+                    }
+                    if(NULL==forstmt->update->exprHeadNode){
+                          printf("            (step) ");
+                    }else{
+                         printf("            (step) ");
+                         printAnExpr(forstmt->update->exprHeadNode, space+4);
+                    }
+                    //printAnExpr(forstmt->cond->exprHeadNode, space+4);
+                    //printAnExpr(forstmt->update->exprHeadNode, space+4);
+                    printf("                 (body) StmtBlock:\n");
+                    printABlock(forstmt->stmt, space+4);
+                    break;}
                 default:
                     break;
           }
@@ -1135,54 +1175,9 @@ void Program::printAST(){
                               printf("            Type: %d\n            Identifier:%s\n",formal->type, formal->ident);
                               formal = formal->formal;
                          }
-                         bodyStmt *stmtInfor = function->funcstmt;
                          printf("        (body) StmtBlock:\n");
-                         
-                         /*while(stmtInfor != NULL){
-                              if(stmtInfor->category == STMT_VAR){
-                                  printf("            VarDecl:\n");
-                                  printf("                Type: %d\n", ((VariableDecl*)(stmtInfor->stmtPointer))->type);
-                                  printf("                Identifier: %s\n", ((VariableDecl*)(stmtInfor->stmtPointer))->ident);
-                              }else if(stmtInfor->category == STMT_BREAK){
-                                  printf("            BreakStmt:%s\n", "break");
-                              }else if(stmtInfor->category == STMT_RET){
-                                  printf("            ReturnStmt:\n");
-                                  printAnExpr(((retStmt*)(stmtInfor->stmtPointer))->retExpr->exprHeadNode, 16);
-                              }else if(stmtInfor->category == STMT_PRINT){
-                                  printf("            PrintStmt:\n");
-                                  printStmt* printstmt = ((printStmt*)(stmtInfor->stmtPointer));
-                                  if(printstmt->actualList!=NULL){
-                                      Expr* printexpr = printstmt->actualList;
-                                      while(printexpr){
-                                          printf("                (args) ");
-                                          printAnExpr(printexpr->exprHeadNode,16);
-                                          printexpr = printexpr->next;
-                                      }
-                                  }
-                              }else if(stmtInfor->category == STMT_CALL){
-                                  printf("            Call:\n");
-                                  funcCall* callstmt = ((funcCall*)(stmtInfor->stmtPointer));
-                                  printf("                Identifier: %s\n", callstmt->ident);
-                                  if(callstmt->actualList!=NULL){
-                                      Expr* callexpr = callstmt->actualList;
-                                      while(callexpr){
-                                          printAnExpr(callexpr->exprHeadNode,16);
-                                          callexpr = callexpr->next;
-                                      }
-                                  }
-                              }else if(stmtInfor->category == STMT_EXPR){
-                                  printAnExpr(((Expr*)(stmtInfor->stmtPointer))->exprHeadNode, 12);
-                              }else if(stmtInfor->category == STMT_WHILE){
-                                  printf("            WhileStmt:\n");
-                                  //printf("               (test) RelationalExpr:\n");
-                                  printAnExpr(((whileStmt*)(stmtInfor->stmtPointer))->cond->exprHeadNode, 16);
-                                  printf("                 (body) StmtBlock:\n");
-                                  printABlock(((whileStmt*)(stmtInfor->stmtPointer))->stmt, 16);
-                              }else{
-                                   ;
-                              }
-                              stmtInfor = stmtInfor->next;
-                         }*/
+                         //bodyStmt *stmtInfor = function->funcstmt;
+                         function->printABlock(function->funcstmt, 12);
                          printf("\n");
                     }else{
                          printf("Declaration Category Error 0.\n");

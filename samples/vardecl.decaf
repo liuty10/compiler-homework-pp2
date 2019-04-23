@@ -1,12 +1,9 @@
-int a;
-int b;
-int c;
-double main(bool x, bool y, bool z){
-    double e;
-    double f;
-    double g;
-    break;
-    return 1;
-    return a+b;
-    return (c+d);
+double main(){
+    while(a>b){
+	Print(a, " ");
+	a = a + 1;
+    }
+  for (; a <= 10 || done; a = a + 1) {
+     Print(a, " ");
+  }
 }
