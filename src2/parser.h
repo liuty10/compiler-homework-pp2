@@ -14,6 +14,7 @@ int row_index;
 int nextRowError = 0;
 int globalNextParsePos = -1;
 int ifStmtFlag = 0;
+int elseStmtFlag = 0;
 //EXPR_CONSTANT
 //EXPR_IDENT
 class constIdentOperatorNode{
@@ -177,7 +178,7 @@ class Stmt{
            int multipleStmtFlag;
            bodyStmt* stmtCurrentInfor;
            void printABlock(bodyStmt* stmt, int space);
-           void printAnExpr(constIdentOperatorNode* node, int space);
+           void printAnExpr(constIdentOperatorNode* node, int space, int special);
       private:
            void findSemiColonPos(int *firstPos, int *secondPos){
                 int i=0;
@@ -519,17 +520,18 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                               tokenInRow[rowTokenNum-1].category == T_RPara      ){//check if the token after ) is { or not
                                ifStmtFlag = 1;
                                ifStart    = ifstmt->parseStmtBlock(input_file);
-                               elseStart    = ifstmt->parseStmtBlock(input_file);
+                               elseStmtFlag = 1;
+                               elseStart  = ifstmt->parseStmtBlock(input_file);
                                ifstmt->ifstmt   = ifStart; 
                                ifstmt->elsestmt = elseStart; 
                            }else{//stmt same row.
                                Expr*          ifexpr = new Expr();
-                               ifexpr->exprHeadNode    = ifexpr->parseExpr(i+1, rowTokenNum-1);
+                               ifexpr->exprHeadNode  = ifexpr->parseExpr(i+1, rowTokenNum-1);
                                ifStart = new bodyStmt();
                                ifStart->category = STMT_EXPR;
                                ifStart->stmtPointer = ifexpr;
-                               ifstmt->ifstmt   = ifStart; 
-                               ifstmt->elsestmt = NULL; 
+                               ifstmt->ifstmt   = ifStart;
+                               ifstmt->elsestmt = NULL;
                            }
                       }
                       if(retPointer == NULL){
@@ -814,19 +816,19 @@ bool Program::parseProgram(FILE* input_file){
         return true;
 };
 
-void Stmt::printAnExpr(constIdentOperatorNode* node, int space){
+void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
      int i;
      switch(node->category){
            case T_Assign:
                 for(i=0;i<space;i++) printf(" ");
                 printf("AssignExpr:\n");
                 if(node->left != NULL){
-                     printAnExpr(node->left, space+4);
+                     printAnExpr(node->left, space+4, 0);
                 }
                 for(i=0;i<space+4;i++) printf(" ");
                 printf("Operator: =\n");
                 if(node->right != NULL){
-                     printAnExpr(node->right, space+4);
+                     printAnExpr(node->right, space+4, 0);
                 }
                 break;
            case T_NULL:
@@ -859,168 +861,168 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space){
                 for(i=0;i<space;i++) printf(" ");
                 printf("LogicalExpr:\n");
                 if(node->left != NULL){
-                     printAnExpr(node->left, space+4);
+                     printAnExpr(node->left, space+4, 0);
                 }
                 for(i=0;i<space+4;i++) printf(" ");
                 printf("Operator: ||\n");
                 if(node->right != NULL){
-                     printAnExpr(node->right, space+4);
+                     printAnExpr(node->right, space+4, 0);
                 }
                 break;
            case T_Logic_And:
                 for(i=0;i<space;i++) printf(" ");
                 printf("LogicalExpr:\n");
                 if(node->left != NULL){
-                     printAnExpr(node->left, space+4);
+                     printAnExpr(node->left, space+4, 0);
                 }
                 for(i=0;i<space+4;i++) printf(" ");
                 printf("Operator: &&\n");
                 if(node->right != NULL){
-                     printAnExpr(node->right, space+4);
+                     printAnExpr(node->right, space+4, 0);
                 }
                 break;
            case T_Logic_Not:
                 for(i=0;i<space;i++) printf(" ");
                 printf("LogicalExpr:\n");
                 if(node->left != NULL){
-                     printAnExpr(node->left, space+4);
+                     printAnExpr(node->left, space+4, 0);
                 }
                 for(i=0;i<space+4;i++) printf(" ");
                 printf("Operator: !\n");
                 if(node->right != NULL){
-                     printAnExpr(node->right, space+4);
+                     printAnExpr(node->right, space+4, 0);
                 }
                 break;
            case T_Add:
                 for(i=0;i<space;i++) printf(" ");
                 printf("ArithmeticExpr:\n");
                 if(node->left != NULL){
-                     printAnExpr(node->left, space+4);
+                     printAnExpr(node->left, space+4, 0);
                 }
                 for(i=0;i<space+4;i++) printf(" ");
                 printf("Operator: +\n");
                 if(node->right != NULL){
-                     printAnExpr(node->right, space+4);
+                     printAnExpr(node->right, space+4, 0);
                 }
                 break;
            case T_Sub:
                 for(i=0;i<space;i++) printf(" ");
                 printf("ArithmeticExpr:\n");
                 if(node->left != NULL){
-                     printAnExpr(node->left, space+4);
+                     printAnExpr(node->left, space+4, 0);
                 }
                 for(i=0;i<space+4;i++) printf(" ");
                 printf("Operator: -\n");
                 if(node->right != NULL){
-                     printAnExpr(node->right, space+4);
+                     printAnExpr(node->right, space+4, 0);
                 }
                 break;
            case T_Mul:
                 for(i=0;i<space;i++) printf(" ");
                 printf("ArithmeticExpr:\n");
                 if(node->left != NULL){
-                     printAnExpr(node->left, space+4);
+                     printAnExpr(node->left, space+4, 0);
                 }
                 for(i=0;i<space+4;i++) printf(" ");
                 printf("Operator: *\n");
                 if(node->right != NULL){
-                     printAnExpr(node->right, space+4);
+                     printAnExpr(node->right, space+4, 0);
                 }
                 break;
            case T_Div:
                 for(i=0;i<space;i++) printf(" ");
                 printf("ArithmeticExpr:\n");
                 if(node->left != NULL){
-                     printAnExpr(node->left, space+4);
+                     printAnExpr(node->left, space+4, 0);
                 }
                 for(i=0;i<space+4;i++) printf(" ");
                 printf("Operator: /\n");
                 if(node->right != NULL){
-                     printAnExpr(node->right, space+4);
+                     printAnExpr(node->right, space+4, 0);
                 }
                 break;
            case T_Percent:
                 for(i=0;i<space;i++) printf(" ");
                 printf("ArithmeticExpr:\n");
                 if(node->left != NULL){
-                     printAnExpr(node->left, space+4);
+                     printAnExpr(node->left, space+4, 0);
                 }
                 for(i=0;i<space+4;i++) printf(" ");
                 printf("Operator: /%\n");
                 if(node->right != NULL){
-                     printAnExpr(node->right, space+4);
+                     printAnExpr(node->right, space+4, 0);
                 }
                 break;
            case T_Equal:
                 for(i=0;i<space;i++) printf(" ");
                 printf("EqualityExpr:\n");
                 if(node->left != NULL){
-                     printAnExpr(node->left, space+4);
+                     printAnExpr(node->left, space+4, 0);
                 }
                 for(i=0;i<space+4;i++) printf(" ");
                 printf("Operator: ==\n");
                 if(node->right != NULL){
-                     printAnExpr(node->right, space+4);
+                     printAnExpr(node->right, space+4, 0);
                 }
                 break;
            case T_NotEqual:
                 for(i=0;i<space;i++) printf(" ");
                 printf("RelationalExpr:\n");
                 if(node->left != NULL){
-                     printAnExpr(node->left, space+4);
+                     printAnExpr(node->left, space+4, 0);
                 }
                 for(i=0;i<space+4;i++) printf(" ");
                 printf("Operator: !=\n");
                 if(node->right != NULL){
-                     printAnExpr(node->right, space+4);
+                     printAnExpr(node->right, space+4, 0);
                 }
                 break;
            case T_Less:
                 for(i=0;i<space;i++) printf(" ");
                 printf("RelationalExpr:\n");
                 if(node->left != NULL){
-                     printAnExpr(node->left, space+4);
+                     printAnExpr(node->left, space+4, 0);
                 }
                 for(i=0;i<space+4;i++) printf(" ");
                 printf("Operator: <\n");
                 if(node->right != NULL){
-                     printAnExpr(node->right, space+4);
+                     printAnExpr(node->right, space+4, 0);
                 }
                 break;
            case T_LessEqual:
                 for(i=0;i<space;i++) printf(" ");
                 printf("RelationalExpr:\n");
                 if(node->left != NULL){
-                     printAnExpr(node->left, space+4);
+                     printAnExpr(node->left, space+4, 0);
                 }
                 for(i=0;i<space+4;i++) printf(" ");
                 printf("Operator: <=\n");
                 if(node->right != NULL){
-                     printAnExpr(node->right, space+4);
+                     printAnExpr(node->right, space+4, 0);
                 }
                 break;
            case T_Larger:
                 for(i=0;i<space;i++) printf(" ");
                 printf("RelationalExpr:\n");
                 if(node->left != NULL){
-                     printAnExpr(node->left, space+4);
+                     printAnExpr(node->left, space+4, 0);
                 }
                 for(i=0;i<space+4;i++) printf(" ");
                 printf("Operator: >\n");
                 if(node->right != NULL){
-                     printAnExpr(node->right, space+4);
+                     printAnExpr(node->right, space+4, 0);
                 }
                 break;
            case T_GreaterEqual:
                 for(i=0;i<space;i++) printf(" ");
                 printf("RelationalExpr:\n");
                 if(node->left != NULL){
-                     printAnExpr(node->left, space+4);
+                     printAnExpr(node->left, space+4, 0);
                 }
                 for(i=0;i<space+4;i++) printf(" ");
                 printf("Operator: >=\n");
                 if(node->right != NULL){
-                     printAnExpr(node->right, space+4);
+                     printAnExpr(node->right, space+4, 0);
                 }
                 break;
            case T_ReadInteger:
@@ -1032,14 +1034,18 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space){
                 printf("ReadLineExpr:\n");
                 break;
            case STMT_CALL:
-                //for(i=0;i<space;i++) printf(" ");
-                printf("Call:\n");
                 for(i=0;i<space;i++) printf(" ");
-                printf("    Indentifier: %s\n", node->ident);
-                //printf("    (actuals) ", node->ident);
+                printf("Call:\n");
+                for(i=0;i<space+4;i++) printf(" ");
+                printf("Indentifier: %s\n", node->ident);
+                for(i=0;i<space+4;i++) printf(" ");
+                printf("(actuals) ", node->ident);
                 if(node->left != NULL){
-                     printAnExpr(((funcCall*)(node->left))->actualList->exprHeadNode, space+4);
+                     printAnExpr(((funcCall*)(node->left))->actualList->exprHeadNode, space+4,1);//special
                 }
+           case T_SemiColon:
+                //printf("Empty\n");
+                break; 
            default://function
                 //printf("Empty\n");
                 break;
@@ -1051,77 +1057,104 @@ void Stmt::printABlock(bodyStmt* stmt, int space){
      while(cur_stmt != NULL){
           switch(cur_stmt->category){
                 case STMT_VAR:{
-                    printf("            VarDecl:\n");
-                    printf("                Type: %d\n", ((VariableDecl*)(cur_stmt->stmtPointer))->type);
-                    printf("                Identifier: %s\n", ((VariableDecl*)(cur_stmt->stmtPointer))->ident);
+                    int i;
+                    for(i=0;i<space;i++) printf(" ");
+                    printf("VarDecl:\n");
+                    for(i=0;i<space+4;i++) printf(" ");
+                    printf("Type: %d\n", ((VariableDecl*)(cur_stmt->stmtPointer))->type);
+                    for(i=0;i<space+4;i++) printf(" ");
+                    printf("Identifier: %s\n", ((VariableDecl*)(cur_stmt->stmtPointer))->ident);
                     break;}
                 case STMT_BREAK:{
-                    printf("            BreakStmt:%s\n", "break");
+                    int i;
+                    for(i=0;i<space;i++) printf(" ");
+                    printf("BreakStmt:%s\n", "break");
                     break;}
                 case STMT_RET:{
-                    printf("            ReturnStmt:\n");
+                    int i;
+                    for(i=0;i<space;i++) printf(" ");
+                    printf("ReturnStmt:\n");
                     retStmt* retstmt = (retStmt*)(cur_stmt->stmtPointer);
-                    printAnExpr(retstmt->retExpr->exprHeadNode, 16);
+                    printAnExpr(retstmt->retExpr->exprHeadNode, space+4, 0);
                     break;}
                 case STMT_PRINT:{
-                    printf("            PrintStmt:\n");
+                    int i;
+                    for(i=0;i<space;i++) printf(" ");
+                    printf("PrintStmt:\n");
                     printStmt* printstmt = (printStmt*)(cur_stmt->stmtPointer);
                     if(printstmt->actualList!=NULL){
                         Expr* printexpr = printstmt->actualList;
                         while(printexpr){
-                            printf("                (args) ");
-                            printAnExpr(printexpr->exprHeadNode,space+4);
+                            int i;
+                            for(i=0;i<space+4;i++) printf(" ");
+                            printf("(args) ");
+                            printAnExpr(printexpr->exprHeadNode,space+4,1);//special
                             printexpr = printexpr->next;
                         }
                     }
                     break;}
                 case STMT_CALL:{
-                    printf("            Call:\n");
+                    int i;
+                    for(i=0;i<space;i++) printf(" ");
+                    printf("Call:\n");
                     funcCall* callstmt = (funcCall*)(cur_stmt->stmtPointer);
-                    printf("                Identifier: %s\n", callstmt->ident);
+                    for(i=0;i<space+4;i++) printf(" ");
+                    printf("Identifier: %s\n", callstmt->ident);
                     if(callstmt->actualList!=NULL){
                         Expr* callexpr = callstmt->actualList;
                         while(callexpr){
-                            printAnExpr(callexpr->exprHeadNode,space+4);
+                            printAnExpr(callexpr->exprHeadNode,space+4, 0);
                             callexpr = callexpr->next;
                         }
                     }
                     break;}
                 case STMT_EXPR:{
-                    printAnExpr(((Expr*)(cur_stmt->stmtPointer))->exprHeadNode, space);
+                    printAnExpr(((Expr*)(cur_stmt->stmtPointer))->exprHeadNode, space, 0);
                     break;}
                 case STMT_WHILE:{
+                    int i;
+                    for(i=0;i<space;i++) printf(" ");
                     whileStmt* whilestmt = (whileStmt*)(cur_stmt->stmtPointer);
-                    printf("            WhileStmt:\n");
-                    printAnExpr(whilestmt->cond->exprHeadNode, space+4);
-                    printf("                 (body) StmtBlock:\n");
-                    printABlock(whilestmt->stmt, space+4);
+                    printf("WhileStmt:\n");
+                    for(i=0;i<space+4;i++) printf(" ");
+                    printf("(test) ");
+                    printAnExpr(whilestmt->cond->exprHeadNode, space+4, 0);
+                    for(i=0;i<space+4;i++) printf(" ");
+                    printf("(body) StmtBlock:\n");
+                    printABlock(whilestmt->stmt, space+8);
                     break;}
                 case STMT_FOR:{
+                    int i;
+                    for(i=0;i<space;i++) printf(" ");
                     forStmt* forstmt = (forStmt*)(cur_stmt->stmtPointer);
-                    printf("            ForStmt:\n");
-                    if(NULL==forstmt->init->exprHeadNode){
-                          printf("            (init)");
+                    printf("ForStmt:\n");
+                    if(';'==forstmt->init->exprHeadNode->ident[0]){
+                          for(i=0;i<space+4;i++) printf(" ");
+                          printf("(init) Empty\n");
                     }else{
-                         printf("            (init) ");
-                         printAnExpr(forstmt->init->exprHeadNode, space+4);
+                         for(i=0;i<space+4;i++) printf(" ");
+                         printf("(init) ");
+                         printAnExpr(forstmt->init->exprHeadNode, space+4, 0);
                     }
-                    if(NULL==forstmt->cond->exprHeadNode){
-                          printf("            (test) ");
+                    if(';'==forstmt->cond->exprHeadNode->ident[0]){
+                          for(i=0;i<space+4;i++) printf(" ");
+                          printf("(test) Empty\n");
                     }else{
-                         printf("            (test) ");
-                         printAnExpr(forstmt->cond->exprHeadNode, space+4);
+                         for(i=0;i<space+4;i++) printf(" ");
+                         printf("(test) ");
+                         printAnExpr(forstmt->cond->exprHeadNode, space+4, 0);
                     }
-                    if(NULL==forstmt->update->exprHeadNode){
-                          printf("            (step) ");
+                    if(';'==forstmt->update->exprHeadNode->ident[0]){
+                          for(i=0;i<space+4;i++) printf(" ");
+                          printf("(step) Empty\n");
                     }else{
-                         printf("            (step) ");
-                         printAnExpr(forstmt->update->exprHeadNode, space+4);
+                         for(i=0;i<space+4;i++) printf(" ");
+                         printf("(step) ");
+                         printAnExpr(forstmt->update->exprHeadNode, space+4, 0);
                     }
-                    //printAnExpr(forstmt->cond->exprHeadNode, space+4);
-                    //printAnExpr(forstmt->update->exprHeadNode, space+4);
-                    printf("                 (body) StmtBlock:\n");
-                    printABlock(forstmt->stmt, space+4);
+                    for(i=0;i<space+4;i++) printf(" ");
+                    printf("(body) StmtBlock:\n");
+                    printABlock(forstmt->stmt, space+8);
                     break;}
                 default:
                     break;
@@ -1151,7 +1184,6 @@ void Program::printAST(){
                               formal = formal->formal;
                          }
                          printf("        (body) StmtBlock:\n");
-                         //bodyStmt *stmtInfor = function->funcstmt;
                          function->printABlock(function->funcstmt, 12);
                          printf("\n");
                     }else{
