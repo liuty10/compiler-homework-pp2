@@ -39,25 +39,26 @@
 #define T_Print		18
 #define T_ReadInteger	19
 #define T_ReadLine	20
-
-#define T_Add		21
-#define T_Sub		22
-#define T_Mul		23
-#define T_Div		24
-#define T_Percent	25
+#define T_Assign	21
+#define T_Logic_Or	22
+#define T_Logic_And	23
+#define T_Equal		24
+#define T_NotEqual	25
 #define T_Less		26
 #define T_LessEqual	27
 #define T_Larger	28
 #define T_GreaterEqual	29
-#define T_Equal		30
-#define T_NotEqual	31
-#define T_Logic_Or	32
-#define T_Logic_And	33
-#define T_Logic_Not	34
-#define T_Bitwise_Or	35
-#define T_Bitwise_And	36
-#define T_Bitwise_Not	37
-#define T_Assign	38
+#define T_Add		30
+#define T_Sub		31
+#define T_Mul		32
+#define T_Div		33
+#define T_Percent	34
+#define T_Logic_Not	35
+
+#define T_Bitwise_Or    36
+#define T_Bitwise_And	37
+#define T_Bitwise_Not	38
+
 #define T_Point		39
 #define T_Increase	40
 #define T_Decrease	41
@@ -95,7 +96,6 @@
 #define STATUS_FUNCSTART    4
 #define STATUS_FUNCBODY     5
 
-
 //Parser: stmt category
 #define STMT_VAR     0
 #define STMT_BLOCK     1
@@ -106,6 +106,7 @@
 #define STMT_BREAK     6
 #define STMT_PRINT     7
 #define STMT_EXPR      8
+#define STMT_CALL      100
 
 #define EXPR_ASSIGN    9
 #define EXPR_CONSTANT  10

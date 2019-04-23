@@ -1,8 +1,0 @@
-int a;
-int b;
-int c;
-double main(){
-    double e;
-    double f;
-    double g;
-}

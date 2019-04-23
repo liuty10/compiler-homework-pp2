@@ -1,1 +1,1 @@
-gcc ../main.c -o ./dcc
+g++ ../src/*.c -o ./dcc

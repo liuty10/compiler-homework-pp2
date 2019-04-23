@@ -19,10 +19,7 @@
 */
 
 #include"parser.h"
-
-extern struct token tokenInRow[MAX_TOKEN_IN_ROW];
 extern void pre_processor(FILE* source, FILE* dest);
-extern int getTokens(char *inputLine, int cur_row);
 
 void print_usage(){
 	printf("Usage: ./dcc -t -i inputfile -o [outputfile]\n");
@@ -37,9 +34,8 @@ struct option long_options[] = {
 	{0, 0, 0, 0}
 };
 int main(int argc, char* argv[]){
-	int option,row_index,rowTokenNum,i;
+	int option;
 	int token_flag = 0;
-	char szLineBuffer[MAX_LINE_SIZE + 1];//input buffer for fgets
 	char *source_file_name = "";
 	char *processed_file_name = "tmp.out";
 	char *output_file_name = "a.out";
@@ -73,24 +69,17 @@ int main(int argc, char* argv[]){
     	}
 	source_file 	= fopen(source_file_name, "r");
 	processed_file 	= fopen(processed_file_name, "w+");
-        //process MACROs
 	pre_processor(source_file, processed_file);
-        
-	row_index = 0;
 	rewind(processed_file);
+
         Program *prog = (Program*)new Program();
-        void* nodePointer = NULL;
-	while(fgets(szLineBuffer, MAX_LINE_SIZE, processed_file)!=NULL){
-		row_index++;
-		if(szLineBuffer[0] == '\n') continue;
-                //scanner for tokens in a row
-		rowTokenNum = getTokens(szLineBuffer, row_index);//tokens for this row in array.
-                for(i=0;i<rowTokenNum && rowTokenNum>=1;i++){
-                    nodePointer = parser(&tokenInRow[i], prog, nodePointer); 
-                }
-                
-	}
-        prog->printAST();
+        //prog->parseProgram(processed_file);
+
+        if(!prog->parseProgram(processed_file)){
+             printf("Parse Errors.\n");
+        }else{
+             prog->printAST();
+        }
 	fclose(source_file);
 	fclose(processed_file);
     	return 0;
