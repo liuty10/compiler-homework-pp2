@@ -287,12 +287,9 @@ void printStmt::parseActuals(int start, int end){
      int argc_num = getArgcNum(commaPos, start, end);
      for(i=0;i<argc_num;i++){
         Expr* expr = new Expr();
-        //if(tokenInRow[i].category == T_String){
         if(tokenInRow[commaPos[i]].category == T_StringConstant){
              expr->selfcategory = T_StringConstant;
-             //expr->selfcategory = T_String;
              expr->exprHeadNode = new constIdentOperatorNode(T_StringConstant, tokenInRow[commaPos[i]].token);
-             //expr->exprHeadNode = new constIdentOperatorNode(T_String, tokenInRow[commaPos[i]].token);
         }else{
              expr->exprHeadNode = expr->parseExpr(commaPos[i],commaPos[i+1]-2);
         }
@@ -334,19 +331,16 @@ class FunctionDecl:public Stmt{
                ident[0] = '\0';
                formal = NULL;
                funcstmt   = NULL;
-               //stmtFirstInfor   = NULL;
            };
            FunctionDecl(int declType, char* name){
                type = declType;
                strcpy(ident, name);
                formal = NULL;
                funcstmt   = NULL;
-               //stmtFirstInfor   = NULL;
            };
            ~FunctionDecl(){
                 if(formal != NULL) {delete formal; formal=NULL;}
                 if(funcstmt   != NULL) {delete funcstmt; funcstmt=NULL;}
-                //if(stmtFirstInfor   != NULL) {delete stmtFirstInfor; stmtFirstInfor=NULL;}
            };
        VariableDecl* parseFormals(FILE* input_file, int index);
        public:
@@ -451,6 +445,10 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                               printf("Declaration in stmt wrong, expect identifier\n");
                               return false;
                          }
+                         if(elseStmtFlag == 1){
+                             elseStmtFlag = 0;
+                             return retPointer;
+                         }
                 }else if(tokenInRow[0].category==T_Identifier && tokenInRow[1].category==T_LPara){
                       funcCall*     funcall = new funcCall(tokenInRow[0].token);
                       funcall->parseActuals(0, rowTokenNum-1);
@@ -465,6 +463,10 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                       }else{
                            stmtCurrentInfor->next = CallTmp;
                            stmtCurrentInfor = stmtCurrentInfor->next;
+                      }
+                      if(elseStmtFlag == 1){
+                          elseStmtFlag = 0;
+                          return retPointer;
                       }
                 }else if(tokenInRow[0].category==T_Identifier     ||
                          tokenInRow[0].category==T_Logic_Not      ||
@@ -503,6 +505,10 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                               stmtCurrentInfor->next = exprTmp;
                               stmtCurrentInfor=stmtCurrentInfor->next;
                          }
+                      if(elseStmtFlag == 1){
+                          elseStmtFlag = 0;
+                          return retPointer;
+                      }
                 }else if(tokenInRow[0].category==T_If){
                       Expr*          cond = new Expr();
                       bodyStmt*   ifStart = NULL;
@@ -527,13 +533,13 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                                ifstmt->ifstmt   = ifStart; 
                                ifstmt->elsestmt = elseStart; 
                            }else{//stmt same row.
-                               Expr*          ifexpr = new Expr();
-                               ifexpr->exprHeadNode  = ifexpr->parseExpr(i+1, rowTokenNum-1);
-                               ifStart = new bodyStmt();
-                               ifStart->category = STMT_EXPR;
-                               ifStart->stmtPointer = ifexpr;
-                               ifstmt->ifstmt   = ifStart;
-                               ifstmt->elsestmt = NULL;
+                                   Expr*          ifexpr = new Expr();
+                                   ifexpr->exprHeadNode  = ifexpr->parseExpr(i+1, rowTokenNum-1);
+                                   ifStart = new bodyStmt();
+                                   ifStart->category = STMT_EXPR;
+                                   ifStart->stmtPointer = ifexpr;
+                                   ifstmt->ifstmt   = ifStart;
+                                   ifstmt->elsestmt = NULL;
                            }
                       }
                       if(retPointer == NULL){
@@ -542,6 +548,10 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                       }else{
                            stmtCurrentInfor->next = IfTmp;
                            stmtCurrentInfor = stmtCurrentInfor->next;
+                      }
+                      if(elseStmtFlag == 1){
+                          elseStmtFlag = 0;
+                          return retPointer;
                       }
                 }else if(tokenInRow[0].category==T_Else){
                       if(ifStmtFlag == 0){
@@ -573,6 +583,10 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                            stmtCurrentInfor->next = WhileTmp;
                            stmtCurrentInfor = stmtCurrentInfor->next;
                       }
+                      if(elseStmtFlag == 1){
+                          elseStmtFlag = 0;
+                          return retPointer;
+                      }
                 }else if(tokenInRow[0].category==T_For){
                       Expr*          init = new Expr();
                       Expr*          cond = new Expr();
@@ -595,6 +609,10 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                            stmtCurrentInfor->next = ForTmp;
                            stmtCurrentInfor = stmtCurrentInfor->next;
                       }
+                      if(elseStmtFlag == 1){
+                          elseStmtFlag = 0;
+                          return retPointer;
+                      }
                 }else if(tokenInRow[0].category==T_Return){
                       Expr*     retexpr = new Expr();
                       retexpr->exprHeadNode = retexpr->parseExpr(1, rowTokenNum-2);
@@ -611,6 +629,10 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                       }else{
                            stmtCurrentInfor->next = RetTmp;
                            stmtCurrentInfor = stmtCurrentInfor->next;
+                      }
+                      if(elseStmtFlag == 1){
+                          elseStmtFlag = 0;
+                          return retPointer;
                       }
                 }else if(tokenInRow[0].category==T_Break){
                       if(tokenInRow[rowTokenNum-1].category != T_SemiColon){
@@ -631,6 +653,10 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                          printf("Parsing Error, expect a ; \n");
                          exit(0);
                      }
+                      if(elseStmtFlag == 1){
+                          elseStmtFlag = 0;
+                          return retPointer;
+                      }
                 }else if(tokenInRow[0].category==T_Print){
                       if(tokenInRow[1].category==T_LPara){
                           if(tokenInRow[rowTokenNum-1].category != T_SemiColon){
@@ -651,6 +677,10 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                       }else{
                            printf("Parsing Error, expect a ( \n");
                            exit(0);
+                      }
+                      if(elseStmtFlag == 1){
+                          elseStmtFlag = 0;
+                          return retPointer;
                       }
                 }else if(tokenInRow[0].category==T_LCurvePara){//StmtBlock
                       bodyStmt*  blockstmt = new bodyStmt(STMT_BLOCK,(void*)NULL);
@@ -1011,7 +1041,7 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
                      printAnExpr(node->left, space+4, 0);
                 }
                 for(i=0;i<space+4;i++) printf(" ");
-                printf("Operator: /%\n");
+                printf("Operator: %\n");
                 if(node->right != NULL){
                      printAnExpr(node->right, space+4, 0);
                 }
@@ -1148,6 +1178,7 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
 };
 
 void Stmt::printABlock(bodyStmt* stmt, int space){
+     int i;
      bodyStmt* cur_stmt = stmt;
      while(cur_stmt != NULL){
           switch(cur_stmt->category){
@@ -1163,14 +1194,19 @@ void Stmt::printABlock(bodyStmt* stmt, int space){
                 case STMT_BREAK:{
                     int i;
                     for(i=0;i<space;i++) printf(" ");
-                    printf("BreakStmt:%s\n", "break");
+                    printf("BreakStmt:\n");
                     break;}
                 case STMT_RET:{
                     int i;
                     for(i=0;i<space;i++) printf(" ");
                     printf("ReturnStmt:\n");
                     retStmt* retstmt = (retStmt*)(cur_stmt->stmtPointer);
-                    printAnExpr(retstmt->retExpr->exprHeadNode, space+4, 0);
+                    if(T_SemiColon==retstmt->retExpr->exprHeadNode->category){
+                         for(i=0;i<space+4;i++) printf(" ");
+                         printf("Empty:\n");
+                    }else{
+                         printAnExpr(retstmt->retExpr->exprHeadNode, space+4, 0);
+                    }
                     break;}
                 case STMT_PRINT:{
                     int i;
@@ -1219,8 +1255,10 @@ void Stmt::printABlock(bodyStmt* stmt, int space){
                     for(i=0;i<space+4;i++) printf(" ");
                     printf("(then):\n");
                     printABlock(ifstmt->ifstmt, space+8);
-                    for(i=0;i<space+4;i++) printf(" ");
-                    printf("(else):\n");
+                    if(ifstmt->elsestmt != NULL){
+                        for(i=0;i<space+4;i++) printf(" ");
+                        printf("(else):%p\n", ifstmt->elsestmt);
+                    }
                     printABlock(ifstmt->elsestmt, space+8);
                     break;}
                 case STMT_WHILE:{
@@ -1288,8 +1326,6 @@ void Program::printAST(){
                          printf("        (return type) Type: %s\n", typeString[function->type]);
                          printf("        Identifier: %s\n", function->ident);
                          VariableDecl *formal = function->formal;
-                         //if(formal!=NULL){
-                         //}
                          while(formal != NULL){
                               printf("        (formals) VarDecl:\n");
                               printf("            Type: %s\n            Identifier:%s\n",typeString[formal->type], formal->ident);
