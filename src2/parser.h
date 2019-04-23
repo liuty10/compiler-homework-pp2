@@ -5,11 +5,6 @@
 
 #include "define.h"
 
-/* Here lists definitions of Expr
- *
-*/
-
-//function declarations
 extern struct token tokenInRow[MAX_TOKEN_IN_ROW];
 extern int getTokens(char *inputLine, int cur_row);
 bool parser(FILE* input, FILE* output);
@@ -345,15 +340,11 @@ class FunctionDecl:public Stmt{
                 //if(stmtFirstInfor   != NULL) {delete stmtFirstInfor; stmtFirstInfor=NULL;}
            };
        VariableDecl* parseFormals(FILE* input_file, int index);
-       //static bodyStmt* parseStmtBlock(FILE* input);
-       //bodyStmt* parseStmtBlock(FILE* input, int index);
        public:
            int type;//int, double, bool, string, void
            char ident[MAX_TOKEN_SIZE];//1000
            VariableDecl* formal;//a list of varaibles
            bodyStmt* funcstmt;
-           //bodyStmt* stmtFirstInfor;
-           //bodyStmt* stmtCurrentInfor;
 };
 
 VariableDecl* FunctionDecl::parseFormals(FILE* input_file,int i){
@@ -813,7 +804,6 @@ bool Program::parseProgram(FILE* input_file){
                                  if(tokenInRow[3].category == T_RPara ){
                                        if(tokenInRow[4].category == T_LCurvePara){//no formal
                                             declFunc->funcstmt = declFunc->parseStmtBlock(input_file);//the 4rd ele was not deal with.
-                                            //declFunc->stmtFirstInfor = declFunc->parseStmtBlock(input_file);//the 4rd ele was not deal with.
                                        }else{
                                             printf("Declaration Error. expect {\n");
                                             return false;
@@ -821,7 +811,6 @@ bool Program::parseProgram(FILE* input_file){
                                  }else{
                                       declFunc->formal = declFunc->parseFormals(input_file, 3);//start from the index 3.
                                       declFunc->funcstmt = declFunc->parseStmtBlock(input_file);
-                                      //declFunc->stmtFirstInfor = declFunc->parseStmtBlock(input_file);
                                  }
                              }else{
                                  printf("Declaration Error. expect (\n");
@@ -1060,7 +1049,7 @@ void Program::printAnExpr(constIdentOperatorNode* node, int space){
                 for(i=0;i<space;i++) printf(" ");
                 printf("ReadLineExpr:\n");
                 break;
-           default://function
+           case STMT_CALL:
                 //for(i=0;i<space;i++) printf(" ");
                 printf("Call:\n");
                 for(i=0;i<space;i++) printf(" ");
@@ -1068,8 +1057,61 @@ void Program::printAnExpr(constIdentOperatorNode* node, int space){
                 if(node->left != NULL){
                      printAnExpr(((funcCall*)(node->left))->actualList->exprHeadNode, space+4);
                 }
-                
+           default://function
                 break;
+     }
+};
+
+void Stmt::printABlock(bodyStmt* stmt, int space){
+     bodyStmt* cur_stmt = stmt;
+     while(cur_stmt != NULL){
+          switch(cur_stmt->category){
+                case STMT_VAR:
+                    printf("            VarDecl:\n");
+                    printf("                Type: %d\n", ((VariableDecl*)(stmtInfor->stmtPointer))->type);
+                    printf("                Identifier: %s\n", ((VariableDecl*)(stmtInfor->stmtPointer))->ident);
+                    break;
+                case STMT_BREAK:
+                    printf("            BreakStmt:%s\n", "break");
+                    break;
+                case STMT_RET:
+                    printf("            ReturnStmt:\n");
+                    printAnExpr(((retStmt*)(stmtInfor->stmtPointer))->retExpr->exprHeadNode, 16);
+                    break;
+                case STMT_PRINT:
+                    printf("            PrintStmt:\n");
+                    printStmt* printstmt = ((printStmt*)(stmtInfor->stmtPointer));
+                    if(printstmt->actualList!=NULL){
+                        Expr* printexpr = printstmt->actualList;
+                        while(printexpr){
+                            printf("                (args) ");
+                            printAnExpr(printexpr->exprHeadNode,16);
+                            printexpr = printexpr->next;
+                        }
+                    }
+                case STMT_CALL:
+                    printf("            Call:\n");
+                    funcCall* callstmt = ((funcCall*)(stmtInfor->stmtPointer));
+                    printf("                Identifier: %s\n", callstmt->ident);
+                    if(callstmt->actualList!=NULL){
+                        Expr* callexpr = callstmt->actualList;
+                        while(callexpr){
+                            printAnExpr(callexpr->exprHeadNode,16);
+                            callexpr = callexpr->next;
+                        }
+                    }
+                case STMT_EXPR:
+                    printAnExpr(((Expr*)(stmtInfor->stmtPointer))->exprHeadNode, 12);
+                case STMT_WHILE:
+                    printf("            WhileStmt:\n");
+                    //printf("               (test) RelationalExpr:\n");
+                    printAnExpr(((whileStmt*)(stmtInfor->stmtPointer))->cond->exprHeadNode, 16);
+                    printf("                 (body) StmtBlock:\n");
+                    printABlock(((whileStmt*)(stmtInfor->stmtPointer))->stmt, 16);
+                default:
+                    break;
+          }
+          cur_stmt = cur_stmt->next;
      }
 };
 
@@ -1094,8 +1136,9 @@ void Program::printAST(){
                               formal = formal->formal;
                          }
                          bodyStmt *stmtInfor = function->funcstmt;
-                              printf("        (body) StmtBlock:\n");
-                         while(stmtInfor != NULL){
+                         printf("        (body) StmtBlock:\n");
+                         
+                         /*while(stmtInfor != NULL){
                               if(stmtInfor->category == STMT_VAR){
                                   printf("            VarDecl:\n");
                                   printf("                Type: %d\n", ((VariableDecl*)(stmtInfor->stmtPointer))->type);
@@ -1123,7 +1166,6 @@ void Program::printAST(){
                                   if(callstmt->actualList!=NULL){
                                       Expr* callexpr = callstmt->actualList;
                                       while(callexpr){
-                                          //printf("                (args) ");
                                           printAnExpr(callexpr->exprHeadNode,16);
                                           callexpr = callexpr->next;
                                       }
@@ -1134,13 +1176,13 @@ void Program::printAST(){
                                   printf("            WhileStmt:\n");
                                   //printf("               (test) RelationalExpr:\n");
                                   printAnExpr(((whileStmt*)(stmtInfor->stmtPointer))->cond->exprHeadNode, 16);
-                                  //printABlock(((whileStmt*)(stmtInfor->stmtPointer))->stmt, 16);
-                                  
+                                  printf("                 (body) StmtBlock:\n");
+                                  printABlock(((whileStmt*)(stmtInfor->stmtPointer))->stmt, 16);
                               }else{
-
+                                   ;
                               }
                               stmtInfor = stmtInfor->next;
-                         }
+                         }*/
                          printf("\n");
                     }else{
                          printf("Declaration Category Error 0.\n");
