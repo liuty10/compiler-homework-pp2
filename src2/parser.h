@@ -13,6 +13,7 @@ int rowTokenNum;
 int row_index;
 int nextRowError = 0;
 int globalNextParsePos = -1;
+int ifStmtFlag = 0;
 //EXPR_CONSTANT
 //EXPR_IDENT
 class constIdentOperatorNode{
@@ -501,77 +502,61 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                          }
                 }else if(tokenInRow[0].category==T_If){
                       Expr*          cond = new Expr();
-                      bodyStmt*   ifStart = new bodyStmt();
-                      bodyStmt* elseStart = new bodyStmt();
+                      bodyStmt*   ifStart = NULL;
+                      bodyStmt* elseStart = NULL;
                       cond->exprHeadNode  = cond->parseExpr(2, rowTokenNum-1);
                       ifStmt*      ifstmt = new ifStmt(cond, ifStart, elseStart);
                       bodyStmt*    IfTmp  = new bodyStmt(STMT_IF,(void*)ifstmt);
-                      
-                      //if there is a "{" in if stmt, multipleStmtFlag = 1;
-                      //else multipleStmtFlag = 0;
-                      //before parsing next line, complete the remaining tokens in array first.
-                      if(tokenInRow[globalNextParsePos+1].category != T_RPara){
-                           printf("Error, expect ) for if. \n");
-                           exit(0);
+                      int i;
+                      for(i=rowTokenNum-1;i>1;i--){
+                            if(tokenInRow[i].category == T_RPara)
+                                break;
                       }
-                      /*
-                      if(globalNextParsePos+2 <= rowTokenNum-1){
-                         if(tokenInRow[globalNextParsePos+2].category != T_LCurvePara){
-                              multiplaStmtFlag = 0;
-                         }else{
-                              multiplaStmtFlag = 1;
-                              ifStart   = ifstmt->parseStmtBlock(input_file);
-                         }
+                      if(i==1){
+                           printf("Error: missing right para.\n");
                       }else{
-                              multiplaStmtFlag = 0;
-                              ifStart   = ifstmt->parseStmtBlock(input_file);
-                      }
-
-                      for(i=globalNextParsePos+1;i<rowTokenNum-1;i++){
-                            if(tokenInRow[i].category == T_RPara){
-                                if(i+1<=rowTokenNum-1){//we check LCurvePara
-                                    if(tokenInRow[i+1].category == T_RCurvePara){
-                                         
-                                    }else{
-                                         
-                                    }
-                                }else{//only one stmt
-                                    multiplaStmtFlag = 0;
-                                }
-                            }else{
-                                printf("Error, expect ) for if. \n");
-                            }
-                      }
-                      if(tokenInRow[globalNextParsePos+1].category == T_LCurvePara){
-                            multipleStmtFlag = 1;
-                            continue;
-                      }
-                      if(tokenInRow[rowTokenNum-1].category == T_RPara){
-                            multipleStmtFlag = 0;
-                            
-                      }
-                      if(tokenInRow[rowTokenNum-1].category == T_SemiColon){
-                      }
-                      if(tokenInRow[rowTokenNum-1].category == T_LCurvePara){
-                      }
-                      if(tokenInRow[rowTokenNum-1].category == T_RCurvePara){
-                      }*/
-                      ifStart   = ifstmt->parseStmtBlock(input_file);
-                      if(tokenInRow[1].category == T_Else){
-                               elseStart = ifstmt->parseStmtBlock(input_file);
+                           if(tokenInRow[rowTokenNum-1].category == T_LCurvePara ||
+                              tokenInRow[rowTokenNum-1].category == T_RPara      ){//check if the token after ) is { or not
+                               ifStmtFlag = 1;
+                               ifStart    = ifstmt->parseStmtBlock(input_file);
+                               elseStart    = ifstmt->parseStmtBlock(input_file);
+                               ifstmt->ifstmt   = ifStart; 
+                               ifstmt->elsestmt = elseStart; 
+                           }else{//stmt same row.
+                               Expr*          ifexpr = new Expr();
+                               ifexpr->exprHeadNode    = ifexpr->parseExpr(i+1, rowTokenNum-1);
+                               ifStart = new bodyStmt();
+                               ifStart->category = STMT_EXPR;
+                               ifStart->stmtPointer = ifexpr;
+                               ifstmt->ifstmt   = ifStart; 
+                               ifstmt->elsestmt = NULL; 
+                           }
                       }
                       if(retPointer == NULL){
                            retPointer = IfTmp;
                            stmtCurrentInfor = IfTmp;
                       }else{
                            stmtCurrentInfor->next = IfTmp;
-                           stmtCurrentInfor=stmtCurrentInfor->next;
+                           stmtCurrentInfor = stmtCurrentInfor->next;
+                      }
+                }else if(tokenInRow[0].category==T_Else){
+                      if(ifStmtFlag == 0){
+                          printf("\n*** Error line %d.\n", tokenInRow[0].row);
+                          int j;
+                          printf("%s ",szLineBuffer);
+                          for(j=0;j<tokenInRow[0].left-2;j++){
+                              printf(" ");
+                          }
+                          printf("^\n");
+                          printf("*** syntax error\n\n");
+                          exit(0);
+                      }else{
+                          return retPointer;
                       }
                 }else if(tokenInRow[0].category==T_While){
                       bodyStmt*  whileStart = NULL;
                       Expr*            cond = new Expr();
                       cond->exprHeadNode    = cond->parseExpr(2, rowTokenNum-1);
-                      //bodyStmt*  whileStart = new bodyStmt();
                       whileStmt*  whilestmt = new whileStmt(cond, whileStart);
                       bodyStmt*    WhileTmp = new bodyStmt(STMT_WHILE,(void*)whilestmt);
                       whileStart = whilestmt->parseStmtBlock(input_file);
@@ -589,7 +574,6 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                       Expr*          cond = new Expr();
                       Expr*        update = new Expr();
                       bodyStmt*  forStart = NULL;
-                      //bodyStmt*  forStart = new bodyStmt();
                       int firstSemi, secondSemi;
                       firstSemi=secondSemi=0;
                       findSemiColonPos(&firstSemi, &secondSemi);
@@ -667,16 +651,6 @@ bodyStmt* Stmt::parseStmtBlock(FILE* input_file){
                 }else if(tokenInRow[0].category==T_LCurvePara){//StmtBlock
                       bodyStmt*  blockstmt = new bodyStmt(STMT_BLOCK,(void*)NULL);
                       bodyStmt*  BlockTmp  = new bodyStmt(STMT_BLOCK,(void*)blockstmt);
-                      //declFunc->funcstmt = declFunc->parseStmtBlock(input_file);//the 4rd ele was not deal with.
-
-                      /*if(retPointer == NULL){
-                           retPointer = RetTmp;
-                           stmtCurrentInfor = RetTmp;
-                      }else{
-                           stmtCurrentInfor->next = RetTmp;
-                           stmtCurrentInfor = stmtCurrentInfor->next;
-                      }*/
-                      
                 }else if(tokenInRow[0].category==T_RCurvePara){//StmtBlockEnd
                       return retPointer;
                 }else {//Expr
@@ -872,7 +846,7 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space){
                 printf("DoubleConstant: %s\n", node->ident);
                 break;
            case T_StringConstant:
-                for(i=0;i<space;i++) printf(" ");
+                //for(i=0;i<space;i++) printf(" ");
                 printf("StringConstant: %s\n", node->ident);
                 break;
            case T_Identifier:
@@ -1058,15 +1032,16 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space){
                 printf("ReadLineExpr:\n");
                 break;
            case STMT_CALL:
-                for(i=0;i<space;i++) printf(" ");
+                //for(i=0;i<space;i++) printf(" ");
                 printf("Call:\n");
                 for(i=0;i<space;i++) printf(" ");
-                printf("    Indentifier:%s\n", node->ident);
+                printf("    Indentifier: %s\n", node->ident);
+                //printf("    (actuals) ", node->ident);
                 if(node->left != NULL){
                      printAnExpr(((funcCall*)(node->left))->actualList->exprHeadNode, space+4);
                 }
            default://function
-                printf("Empty\n");
+                //printf("Empty\n");
                 break;
      }
 };
