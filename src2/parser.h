@@ -5,6 +5,8 @@
 
 #include "define.h"
 
+char typeString[21][16] ={"","","","","","","void","int","double",
+                          "bool","String","Null"};
 extern struct token tokenInRow[MAX_TOKEN_IN_ROW];
 extern int getTokens(char *inputLine, int cur_row);
 bool parser(FILE* input, FILE* output);
@@ -820,8 +822,12 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
      int i;
      switch(node->category){
            case T_Assign:
-                for(i=0;i<space;i++) printf(" ");
-                printf("AssignExpr:\n");
+                if(special == 1){
+                     printf("AssignExpr:\n");
+                }else{
+                     for(i=0;i<space;i++) printf(" ");
+                     printf("AssignExpr:\n");
+                }
                 if(node->left != NULL){
                      printAnExpr(node->left, space+4, 0);
                 }
@@ -832,34 +838,62 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
                 }
                 break;
            case T_NULL:
-                for(i=0;i<space;i++) printf(" ");
-                printf("nullConstant: %s\n", node->ident);
+                if(special == 1){
+                     printf("nullConstant: %s\n", node->ident);
+                }else{
+                     for(i=0;i<space;i++) printf(" ");
+                     printf("nullConstant: %s\n", node->ident);
+                }
                 break;
            case T_BoolConstant:
+                if(special == 1){
+                printf("BoolConstant: %s\n", node->ident);
+                }else{
                 for(i=0;i<space;i++) printf(" ");
                 printf("BoolConstant: %s\n", node->ident);
+                }
                 break;
            case T_IntConstant:
+                if(special == 1){
+                printf("IntConstant: %s\n", node->ident);
+                }else{
                 for(i=0;i<space;i++) printf(" ");
                 printf("IntConstant: %s\n", node->ident);
+                }
                 break;
            case T_DoubleConstant:
+                if(special == 1){
+                printf("DoubleConstant: %s\n", node->ident);
+                }else{
                 for(i=0;i<space;i++) printf(" ");
                 printf("DoubleConstant: %s\n", node->ident);
+                }
                 break;
            case T_StringConstant:
-                //for(i=0;i<space;i++) printf(" ");
+                if(special == 1){
                 printf("StringConstant: %s\n", node->ident);
+                }else{
+                for(i=0;i<space;i++) printf(" ");
+                printf("StringConstant: %s\n", node->ident);
+                }
                 break;
            case T_Identifier:
+                if(special == 1){
+                printf("FieldAccess:\n");
+                }else{
                 for(i=0;i<space;i++) printf(" ");
                 printf("FieldAccess:\n");
-                for(i=0;i<space;i++) printf(" ");
-                printf("    Identifier: %s\n", node->ident);
+                }
+                for(i=0;i<space+4;i++) printf(" ");
+                printf("Identifier: %s\n", node->ident);
                 break;
            case T_Logic_Or:
+                if(special == 1){
+                printf("LogicalExpr:\n");
+                }else{
                 for(i=0;i<space;i++) printf(" ");
                 printf("LogicalExpr:\n");
+                }
                 if(node->left != NULL){
                      printAnExpr(node->left, space+4, 0);
                 }
@@ -870,8 +904,12 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
                 }
                 break;
            case T_Logic_And:
-                for(i=0;i<space;i++) printf(" ");
-                printf("LogicalExpr:\n");
+                if(special == 1){
+                     printf("LogicalExpr:\n");
+                }else{
+                     for(i=0;i<space;i++) printf(" ");
+                     printf("LogicalExpr:\n");
+                }
                 if(node->left != NULL){
                      printAnExpr(node->left, space+4, 0);
                 }
@@ -882,8 +920,12 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
                 }
                 break;
            case T_Logic_Not:
-                for(i=0;i<space;i++) printf(" ");
-                printf("LogicalExpr:\n");
+                if(special == 1){  
+                    printf("LogicalExpr:\n");
+                }else{
+                    for(i=0;i<space;i++) printf(" ");
+                    printf("LogicalExpr:\n");
+                }
                 if(node->left != NULL){
                      printAnExpr(node->left, space+4, 0);
                 }
@@ -894,8 +936,12 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
                 }
                 break;
            case T_Add:
+                if(special == 1){
+                printf("ArithmeticExpr:\n");
+                }else{
                 for(i=0;i<space;i++) printf(" ");
                 printf("ArithmeticExpr:\n");
+                }
                 if(node->left != NULL){
                      printAnExpr(node->left, space+4, 0);
                 }
@@ -906,8 +952,12 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
                 }
                 break;
            case T_Sub:
-                for(i=0;i<space;i++) printf(" ");
-                printf("ArithmeticExpr:\n");
+                if(special == 1){
+                     printf("ArithmeticExpr:\n");
+                }else{
+                     for(i=0;i<space;i++) printf(" ");
+                     printf("ArithmeticExpr:\n");
+                }
                 if(node->left != NULL){
                      printAnExpr(node->left, space+4, 0);
                 }
@@ -918,8 +968,13 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
                 }
                 break;
            case T_Mul:
-                for(i=0;i<space;i++) printf(" ");
-                printf("ArithmeticExpr:\n");
+                if(special == 1){
+                     printf("ArithmeticExpr:\n");
+                }else{
+                     for(i=0;i<space;i++) printf(" ");
+                     printf("ArithmeticExpr:\n");
+                }
+                
                 if(node->left != NULL){
                      printAnExpr(node->left, space+4, 0);
                 }
@@ -930,8 +985,12 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
                 }
                 break;
            case T_Div:
-                for(i=0;i<space;i++) printf(" ");
-                printf("ArithmeticExpr:\n");
+                if(special == 1){
+                     printf("ArithmeticExpr:\n");
+                }else{
+                     for(i=0;i<space;i++) printf(" ");
+                     printf("ArithmeticExpr:\n");
+                }
                 if(node->left != NULL){
                      printAnExpr(node->left, space+4, 0);
                 }
@@ -942,8 +1001,12 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
                 }
                 break;
            case T_Percent:
-                for(i=0;i<space;i++) printf(" ");
-                printf("ArithmeticExpr:\n");
+                if(special == 1){
+                     printf("ArithmeticExpr:\n");
+                }else{
+                     for(i=0;i<space;i++) printf(" ");
+                     printf("ArithmeticExpr:\n");
+                }
                 if(node->left != NULL){
                      printAnExpr(node->left, space+4, 0);
                 }
@@ -954,8 +1017,12 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
                 }
                 break;
            case T_Equal:
-                for(i=0;i<space;i++) printf(" ");
-                printf("EqualityExpr:\n");
+                if(special == 1){
+                     printf("EqualityExpr:\n");
+                }else{
+                     for(i=0;i<space;i++) printf(" ");
+                     printf("EqualityExpr:\n");
+                }
                 if(node->left != NULL){
                      printAnExpr(node->left, space+4, 0);
                 }
@@ -966,8 +1033,12 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
                 }
                 break;
            case T_NotEqual:
-                for(i=0;i<space;i++) printf(" ");
-                printf("RelationalExpr:\n");
+                if(special == 1){
+                     printf("RelationalExpr:\n");
+                }else{
+                     for(i=0;i<space;i++) printf(" ");
+                     printf("RelationalExpr:\n");
+                }
                 if(node->left != NULL){
                      printAnExpr(node->left, space+4, 0);
                 }
@@ -978,8 +1049,12 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
                 }
                 break;
            case T_Less:
-                for(i=0;i<space;i++) printf(" ");
-                printf("RelationalExpr:\n");
+                if(special == 1){
+                     printf("RelationalExpr:\n");
+                }else{
+                     for(i=0;i<space;i++) printf(" ");
+                     printf("RelationalExpr:\n");
+                }
                 if(node->left != NULL){
                      printAnExpr(node->left, space+4, 0);
                 }
@@ -990,8 +1065,12 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
                 }
                 break;
            case T_LessEqual:
-                for(i=0;i<space;i++) printf(" ");
-                printf("RelationalExpr:\n");
+                if(special == 1){
+                     printf("RelationalExpr:\n");
+                }else{
+                     for(i=0;i<space;i++) printf(" ");
+                     printf("RelationalExpr:\n");
+                }
                 if(node->left != NULL){
                      printAnExpr(node->left, space+4, 0);
                 }
@@ -1002,8 +1081,12 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
                 }
                 break;
            case T_Larger:
-                for(i=0;i<space;i++) printf(" ");
-                printf("RelationalExpr:\n");
+                if(special == 1){
+                     printf("RelationalExpr:\n");
+                }else{
+                     for(i=0;i<space;i++) printf(" ");
+                     printf("RelationalExpr:\n");
+                }
                 if(node->left != NULL){
                      printAnExpr(node->left, space+4, 0);
                 }
@@ -1014,8 +1097,12 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
                 }
                 break;
            case T_GreaterEqual:
-                for(i=0;i<space;i++) printf(" ");
-                printf("RelationalExpr:\n");
+                if(special == 1){
+                     printf("RelationalExpr:\n");
+                }else{
+                     for(i=0;i<space;i++) printf(" ");
+                     printf("RelationalExpr:\n");
+                }
                 if(node->left != NULL){
                      printAnExpr(node->left, space+4, 0);
                 }
@@ -1026,28 +1113,36 @@ void Stmt::printAnExpr(constIdentOperatorNode* node, int space, int special){
                 }
                 break;
            case T_ReadInteger:
-                for(i=0;i<space;i++) printf(" ");
-                printf("ReadIntegerExpr:\n");
+                if(special == 1){
+                     printf("ReadIntegerExpr:\n");
+                }else{
+                     for(i=0;i<space;i++) printf(" ");
+                     printf("ReadIntegerExpr:\n");
+                }
                 break;
            case T_ReadLine:
-                for(i=0;i<space;i++) printf(" ");
-                printf("ReadLineExpr:\n");
+                if(special == 1){
+                     printf("ReadLineExpr:\n");
+                }else{
+                     for(i=0;i<space;i++) printf(" ");
+                     printf("ReadLineExpr:\n");
+                }
                 break;
            case STMT_CALL:
-                for(i=0;i<space;i++) printf(" ");
-                printf("Call:\n");
+                if(special == 1){
+                     printf("Call:\n");
+                }else{
+                     for(i=0;i<space;i++) printf(" ");
+                     printf("Call:\n");
+                }
                 for(i=0;i<space+4;i++) printf(" ");
                 printf("Indentifier: %s\n", node->ident);
                 for(i=0;i<space+4;i++) printf(" ");
-                printf("(actuals) ", node->ident);
+                printf("(actuals) ");
                 if(node->left != NULL){
                      printAnExpr(((funcCall*)(node->left))->actualList->exprHeadNode, space+4,1);//special
                 }
-           case T_SemiColon:
-                //printf("Empty\n");
-                break; 
            default://function
-                //printf("Empty\n");
                 break;
      }
 };
@@ -1061,7 +1156,7 @@ void Stmt::printABlock(bodyStmt* stmt, int space){
                     for(i=0;i<space;i++) printf(" ");
                     printf("VarDecl:\n");
                     for(i=0;i<space+4;i++) printf(" ");
-                    printf("Type: %d\n", ((VariableDecl*)(cur_stmt->stmtPointer))->type);
+                    printf("Type: %s\n", typeString[((VariableDecl*)(cur_stmt->stmtPointer))->type]);
                     for(i=0;i<space+4;i++) printf(" ");
                     printf("Identifier: %s\n", ((VariableDecl*)(cur_stmt->stmtPointer))->ident);
                     break;}
@@ -1103,13 +1198,30 @@ void Stmt::printABlock(bodyStmt* stmt, int space){
                     if(callstmt->actualList!=NULL){
                         Expr* callexpr = callstmt->actualList;
                         while(callexpr){
-                            printAnExpr(callexpr->exprHeadNode,space+4, 0);
+                            for(i=0;i<space+4;i++) printf(" ");
+                            printf("(actuals) ");
+                            printAnExpr(callexpr->exprHeadNode,space+4, 1);
                             callexpr = callexpr->next;
                         }
                     }
                     break;}
                 case STMT_EXPR:{
                     printAnExpr(((Expr*)(cur_stmt->stmtPointer))->exprHeadNode, space, 0);
+                    break;}
+                case STMT_IF:{
+                    int i;
+                    for(i=0;i<space;i++) printf(" ");
+                    ifStmt* ifstmt = (ifStmt*)(cur_stmt->stmtPointer);
+                    printf("IfStmt:\n");
+                    for(i=0;i<space+4;i++) printf(" ");
+                    printf("(test) ");
+                    printAnExpr(ifstmt->cond->exprHeadNode, space+4, 1);
+                    for(i=0;i<space+4;i++) printf(" ");
+                    printf("(then):\n");
+                    printABlock(ifstmt->ifstmt, space+8);
+                    for(i=0;i<space+4;i++) printf(" ");
+                    printf("(else):\n");
+                    printABlock(ifstmt->elsestmt, space+8);
                     break;}
                 case STMT_WHILE:{
                     int i;
@@ -1118,7 +1230,7 @@ void Stmt::printABlock(bodyStmt* stmt, int space){
                     printf("WhileStmt:\n");
                     for(i=0;i<space+4;i++) printf(" ");
                     printf("(test) ");
-                    printAnExpr(whilestmt->cond->exprHeadNode, space+4, 0);
+                    printAnExpr(whilestmt->cond->exprHeadNode, space+4, 1);
                     for(i=0;i<space+4;i++) printf(" ");
                     printf("(body) StmtBlock:\n");
                     printABlock(whilestmt->stmt, space+8);
@@ -1134,7 +1246,7 @@ void Stmt::printABlock(bodyStmt* stmt, int space){
                     }else{
                          for(i=0;i<space+4;i++) printf(" ");
                          printf("(init) ");
-                         printAnExpr(forstmt->init->exprHeadNode, space+4, 0);
+                         printAnExpr(forstmt->init->exprHeadNode, space+4, 1);
                     }
                     if(';'==forstmt->cond->exprHeadNode->ident[0]){
                           for(i=0;i<space+4;i++) printf(" ");
@@ -1142,7 +1254,7 @@ void Stmt::printABlock(bodyStmt* stmt, int space){
                     }else{
                          for(i=0;i<space+4;i++) printf(" ");
                          printf("(test) ");
-                         printAnExpr(forstmt->cond->exprHeadNode, space+4, 0);
+                         printAnExpr(forstmt->cond->exprHeadNode, space+4, 1);
                     }
                     if(';'==forstmt->update->exprHeadNode->ident[0]){
                           for(i=0;i<space+4;i++) printf(" ");
@@ -1150,7 +1262,7 @@ void Stmt::printABlock(bodyStmt* stmt, int space){
                     }else{
                          for(i=0;i<space+4;i++) printf(" ");
                          printf("(step) ");
-                         printAnExpr(forstmt->update->exprHeadNode, space+4, 0);
+                         printAnExpr(forstmt->update->exprHeadNode, space+4, 1);
                     }
                     for(i=0;i<space+4;i++) printf(" ");
                     printf("(body) StmtBlock:\n");
@@ -1169,18 +1281,18 @@ void Program::printAST(){
            while(curDeclP != NULL){
                     if(curDeclP->category == DECL_VAR){
                          printf("    VarDecl:\n");
-                         printf("        Type: %d\n        Identifier:%s\n",curDeclP->declType, curDeclP->ident);
+                         printf("        Type: %s\n        Identifier:%s\n",typeString[curDeclP->declType], curDeclP->ident);
                     }else if(curDeclP->category == DECL_FUNC){
                          printf("    FnDecl:\n");
                          FunctionDecl* function = (FunctionDecl*)(curDeclP->declPointer);
-                         printf("        (return type) Type:%d\n", function->type);
+                         printf("        (return type) Type: %s\n", typeString[function->type]);
                          printf("        Identifier: %s\n", function->ident);
                          VariableDecl *formal = function->formal;
-                         if(formal!=NULL){
-                               printf("        (formals) VarDecl:\n");
-                         }
+                         //if(formal!=NULL){
+                         //}
                          while(formal != NULL){
-                              printf("            Type: %d\n            Identifier:%s\n",formal->type, formal->ident);
+                              printf("        (formals) VarDecl:\n");
+                              printf("            Type: %s\n            Identifier:%s\n",typeString[formal->type], formal->ident);
                               formal = formal->formal;
                          }
                          printf("        (body) StmtBlock:\n");

@@ -39,7 +39,6 @@
 #define T_Print		18
 #define T_ReadInteger	19
 #define T_ReadLine	20
-
 #define T_Assign	21
 #define T_Logic_Or	22
 #define T_Logic_And	23
